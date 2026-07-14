@@ -1,0 +1,8 @@
+{
+  "name": "Controle de Estoque",
+  "description": "Interface mobile-first para gerenciamento de produtos, variantes, movimentações de estoque e métricas de desempenho.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
