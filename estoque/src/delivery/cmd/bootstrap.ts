@@ -18,7 +18,7 @@ export async function createApp(): Promise<express.Application> {
   
   app.use(express.json())
 
-  app.use(createRouter())
+  app.use(createRouter()) 
   app.use(errorHandler)
 
   await getDataSource()
