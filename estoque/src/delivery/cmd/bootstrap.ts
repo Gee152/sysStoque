@@ -11,17 +11,11 @@ dotenv.config()
 export async function createApp(): Promise<express.Application> {
   const app = express()
 
-  const allowedOrigins = (process.env.CORS_ORIGIN || "http://localhost:3000,http://localhost:5173").split(",")
+  // CORS simplificado: O asterisco '*' libera a API para receber requisições de qualquer lugar
   app.use(cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true)
-      } else {
-        callback(new Error("Not allowed by CORS"))
-      }
-    },
-    credentials: true,
+    origin: '*' 
   }))
+  
   app.use(express.json())
 
   app.use(createRouter())
