@@ -322,7 +322,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-100/60 dark:bg-slate-950 transition-colors">
       {!token ? (
-        <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="min-h-dynamic flex items-center justify-center p-4">
           <div className="w-full max-w-md">
             <AuthScreen onAuthSuccess={handleAuthSuccess} darkMode={darkMode} onToggleDark={() => setDarkMode(!darkMode)} />
           </div>
@@ -383,32 +383,32 @@ export default function App() {
           </aside>
 
           {/* Mobile layout (lg:hidden) */}
-          <div className="lg:hidden mobile-frame w-full h-screen bg-slate-50 dark:bg-slate-950 flex flex-col justify-between shadow-lg transition-colors">
-            <div className="flex-1 overflow-y-auto px-4.5 pt-5 scrollbar-none">
+          <div className="lg:hidden mobile-frame w-full h-dynamic bg-slate-50 dark:bg-slate-950 flex flex-col justify-between shadow-lg transition-colors">
+            <div className="flex-1 overflow-y-auto px-4 pt-5 scrollbar-none">
               {content}
             </div>
 
             {/* Mobile bottom nav */}
-            <div className="glass-panel border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 py-2 px-5 shrink-0 flex justify-between items-center z-40 relative shadow-xs">
+            <div className="glass-panel border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 py-1.5 px-2 shrink-0 flex justify-between items-center z-40 relative shadow-xs pb-safe">
               {navItems.map((item) => (
                 <button
                   key={item.id}
                   id={`nav-tab-${item.id}`}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex flex-col items-center gap-1 transition-colors cursor-pointer select-none ${
+                  className={`flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer select-none min-w-[56px] min-h-[44px] rounded-lg px-2 ${
                     activeTab === item.id ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                   }`}
                 >
-                  <item.icon className="w-4.5 h-4.5" />
-                  <span className="text-[9px] tracking-wide">{item.label}</span>
+                  <item.icon className="w-5 h-5" />
+                  <span className="text-[10px] tracking-wide font-medium">{item.label}</span>
                 </button>
               ))}
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer select-none"
+                className="flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer select-none min-w-[56px] min-h-[44px] rounded-lg px-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
               >
-                <SunMoon className="w-4.5 h-4.5" />
-                <span className="text-[9px] tracking-wide">{darkMode ? "Claro" : "Escuro"}</span>
+                <SunMoon className="w-5 h-5" />
+                <span className="text-[10px] tracking-wide font-medium">{darkMode ? "Claro" : "Escuro"}</span>
               </button>
             </div>
           </div>
