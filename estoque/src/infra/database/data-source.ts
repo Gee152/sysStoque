@@ -6,7 +6,16 @@ import { ProductVariantEntity } from "./entities/ProductVariantEntity.js";
 import { MovementEntity } from "./entities/MovementEntity.js";
 import dotenv from 'dotenv';
 
-dotenv.config();
+// 1. Só carrega o dotenv se estiver rodando localmente na sua máquina.
+// Isso evita que o Vercel se confunda caso o arquivo .env tenha ido parar no GitHub.
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
+
+// 2. Trava de Segurança: Verifica imediatamente se a variável existe.
+if (!process.env.DATABASE_URL) {
+  console.error("🚨 ERRO CRÍTICO: A variável DATABASE_URL não foi encontrada pelo Vercel!");
+}
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -30,8 +39,13 @@ let initialized = false;
 
 export async function getDataSource(): Promise<DataSource> {
   if (!initialized) {
+    // 3. Log de diagnóstico para termos certeza do que está acontecendo na nuvem
+    console.log("🔌 Iniciando conexão com o banco. Status da URL:", process.env.DATABASE_URL ? "✅ Presente e capturada" : "❌ VAZIA/UNDEFINED");
+    
     await AppDataSource.initialize();
     initialized = true;
+
+    console.log("✅ Conexão com o Supabase estabelecida com sucesso!");
   }
   return AppDataSource;
 }
