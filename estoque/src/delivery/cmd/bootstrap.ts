@@ -13,12 +13,12 @@ export async function createApp(): Promise<express.Application> {
 
   // CORS simplificado: O asterisco '*' libera a API para receber requisições de qualquer lugar
   app.use(cors({
-    origin: '*' 
+    origin: '*'
   }))
-  
+
   app.use(express.json())
 
-  app.use(createRouter()) 
+  app.use(createRouter())
   app.use(errorHandler)
 
   await getDataSource()
