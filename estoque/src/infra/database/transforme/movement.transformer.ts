@@ -10,7 +10,8 @@ export function toMovementDomain(e: MovementEntity): MovementAssociation {
     e.type,
     e.quantity,
     e.reason || "",
-    e.createdAt
+    e.createdAt,
+    e.updatedAt
   )
 }
 

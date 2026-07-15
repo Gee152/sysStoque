@@ -9,7 +9,8 @@ export function toProductVariantDomain(e: ProductVariantEntity): ProductVariantA
     e.color,
     e.stock,
     e.imageUrl,
-    e.createdAt
+    e.createdAt,
+    e.updatedAt
   )
 }
 

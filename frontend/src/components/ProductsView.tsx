@@ -32,10 +32,12 @@ import { uploadImage } from "../services/api";
 interface ProductsViewProps {
   products: Product[];
   onAddProduct: (productData: any) => Promise<void>;
+  onUpdateProduct: (productId: string, productData: any) => Promise<void>;
+  onDeleteProduct: (productId: string) => Promise<void>;
   onRegisterQuickMovement: (variantId: string, type: "IN" | "OUT", quantity: number, reason: string) => Promise<void>;
 }
 
-export default function ProductsView({ products, onAddProduct, onRegisterQuickMovement }: ProductsViewProps) {
+export default function ProductsView({ products, onAddProduct, onUpdateProduct, onDeleteProduct, onRegisterQuickMovement }: ProductsViewProps) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("TODAS");
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
@@ -52,6 +54,19 @@ export default function ProductsView({ products, onAddProduct, onRegisterQuickMo
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // Edit state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editCategory, setEditCategory] = useState("Vestuário");
+  const [editCostPrice, setEditCostPrice] = useState("");
+  const [editSalePrice, setEditSalePrice] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+
+  // Delete state
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Quick movement panel inside variant accordion
   const [quickMoveQty, setQuickMoveQty] = useState<Record<string, number>>({});
@@ -166,6 +181,47 @@ export default function ProductsView({ products, onAddProduct, onRegisterQuickMo
     }
   };
 
+  const openEditModal = (product: Product) => {
+    setEditingProduct(product);
+    setEditName(product.name);
+    setEditCategory(product.category);
+    setEditCostPrice(String(product.variants[0]?.price || ""));
+    setEditSalePrice(String(product.variants[0]?.price || ""));
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    setEditLoading(true);
+    try {
+      await onUpdateProduct(editingProduct.id, {
+        name: editName,
+        category: editCategory,
+        costPrice: Number(editCostPrice) || 0,
+        salePrice: Number(editSalePrice) || 0,
+      });
+      setShowEditModal(false);
+      setEditingProduct(null);
+    } catch (err: any) {
+      alert(err.message || "Erro ao atualizar produto.");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDeleteConfirm = async (productId: string) => {
+    setDeleteLoading(true);
+    try {
+      await onDeleteProduct(productId);
+      setDeleteConfirmId(null);
+    } catch (err: any) {
+      alert(err.message || "Erro ao excluir produto.");
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const handleQuickMovement = async (variantId: string, type: "IN" | "OUT") => {
     const qty = quickMoveQty[variantId] || 1;
     const reason = quickMoveReason[variantId] || (type === "IN" ? "Ajuste de entrada" : "Ajuste de saída");
@@ -275,6 +331,30 @@ export default function ProductsView({ products, onAddProduct, onRegisterQuickMo
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Edit button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openEditModal(product);
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                      title="Editar produto"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Delete button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirmId(product.id);
+                      }}
+                      className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                      title="Excluir produto"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+
                     {/* Share button */}
                     <button
                       onClick={(e) => {
@@ -675,6 +755,143 @@ export default function ProductsView({ products, onAddProduct, onRegisterQuickMo
                   )}
                 </button>
               </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* EDIT PRODUCT MODAL */}
+      <AnimatePresence>
+        {showEditModal && editingProduct && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-end justify-center"
+          >
+            <div className="absolute inset-0" onClick={() => setShowEditModal(false)} />
+            <motion.div 
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="relative w-full max-w-sm bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto z-10 space-y-3.5 shadow-xl"
+            >
+              <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-1.5 mb-1.5" />
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Editar Produto</h3>
+                <button 
+                  onClick={() => setShowEditModal(false)}
+                  className="text-xs text-slate-400 dark:text-slate-500 font-semibold hover:text-slate-600 dark:hover:text-slate-300"
+                >
+                  Cancelar
+                </button>
+              </div>
+              <form onSubmit={handleEditSubmit} className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Nome do Produto</label>
+                  <input
+                    type="text"
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Categoria</label>
+                    <select
+                      value={editCategory}
+                      onChange={(e) => setEditCategory(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600"
+                    >
+                      <option value="Vestuário">Vestuário</option>
+                      <option value="Periféricos">Periféricos</option>
+                      <option value="Utensílios">Utensílios</option>
+                      <option value="Eletrônicos">Eletrônicos</option>
+                      <option value="Papelaria">Papelaria</option>
+                      <option value="Outros">Outros</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Preço de Venda</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      value={editSalePrice}
+                      onChange={(e) => setEditSalePrice(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-semibold rounded-lg text-xs transition-all flex items-center justify-center gap-1 shadow-md disabled:opacity-50"
+                >
+                  {editLoading ? (
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Salvar Alterações</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <AnimatePresence>
+        {deleteConfirmId && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-slate-200 dark:border-slate-700"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-full bg-rose-50 dark:bg-rose-900/20">
+                  <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Excluir Produto</h3>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Tem certeza que deseja excluir este produto e todas as suas variantes? Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="flex-1 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg text-xs transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleDeleteConfirm(deleteConfirmId)}
+                  disabled={deleteLoading}
+                  className="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs transition-all flex items-center justify-center gap-1 disabled:opacity-50"
+                >
+                  {deleteLoading ? (
+                    <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3 h-3" />
+                      Excluir
+                    </>
+                  )}
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

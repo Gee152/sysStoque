@@ -25,7 +25,7 @@ import DashboardView from "./components/DashboardView";
 import ProductsView from "./components/ProductsView";
 import MovementsView from "./components/MovementsView";
 import SharedProductView from "./components/SharedProductView";
-import { getProducts, getDashboard, createProduct, createMovement, setOnUnauthorized } from "./services/api";
+import { getProducts, getDashboard, createProduct, updateProduct, deleteProduct, createMovement, setOnUnauthorized } from "./services/api";
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("stockflow_token"));
@@ -143,6 +143,26 @@ export default function App() {
     }
   };
 
+  // Update Product handler
+  const handleUpdateProduct = async (productId: string, productData: any) => {
+    try {
+      await updateProduct(productId, productData);
+      await loadAllData();
+    } catch (err: any) {
+      throw new Error(err.message || "Erro ao atualizar produto.");
+    }
+  };
+
+  // Delete Product handler
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      await deleteProduct(productId);
+      await loadAllData();
+    } catch (err: any) {
+      throw new Error(err.message || "Erro ao excluir produto.");
+    }
+  };
+
   // Quick Adjustment handler (inside variant view)
   const handleQuickMovement = async (variantId: string, type: "IN" | "OUT", quantity: number, reason: string) => {
     try {
@@ -178,6 +198,8 @@ export default function App() {
           <ProductsView 
             products={products} 
             onAddProduct={handleAddProduct}
+            onUpdateProduct={handleUpdateProduct}
+            onDeleteProduct={handleDeleteProduct}
             onRegisterQuickMovement={handleQuickMovement}
           />
         );

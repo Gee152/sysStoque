@@ -408,6 +408,45 @@ async function startServer() {
     res.json({ ok: true, data: newProduct });
   });
 
+  // PUT Products (update)
+  app.put(["/products/:id", "/api/products/:id"], authenticate, (req, res) => {
+    const db = loadDb();
+    const productIndex = db.products.findIndex(p => p.id === req.params.id);
+    if (productIndex === -1) {
+      return res.status(404).json({ ok: false, error: "Produto não encontrado." });
+    }
+
+    const { name, category, costPrice, salePrice } = req.body;
+    const nowStr = new Date().toISOString();
+
+    if (name !== undefined) db.products[productIndex].name = name;
+    if (category !== undefined) db.products[productIndex].category = category;
+    if (costPrice !== undefined) (db.products[productIndex] as any).costPrice = costPrice;
+    if (salePrice !== undefined) (db.products[productIndex] as any).salePrice = salePrice;
+
+    db.products[productIndex].updatedAt = nowStr;
+
+    saveDb(db);
+    res.json({ ok: true, data: db.products[productIndex] });
+  });
+
+  // DELETE Products
+  app.delete(["/products/:id", "/api/products/:id"], authenticate, (req, res) => {
+    const db = loadDb();
+    const productIndex = db.products.findIndex(p => p.id === req.params.id);
+    if (productIndex === -1) {
+      return res.status(404).json({ ok: false, error: "Produto não encontrado." });
+    }
+
+    // Remove associated movements
+    db.movements = db.movements.filter(m => m.productId !== req.params.id);
+    // Remove product
+    db.products.splice(productIndex, 1);
+    saveDb(db);
+
+    res.json({ ok: true, data: null });
+  });
+
   // POST Movement
   app.post(["/movements", "/api/movements"], authenticate, (req, res) => {
     const { variantId, type, quantity, reason } = req.body;

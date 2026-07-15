@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
 
 @Entity("users")
 export class UserEntity {
@@ -19,6 +19,9 @@ export class UserEntity {
 
   @CreateDateColumn({ name: "created_at" })
   public createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  public updatedAt!: Date;
 
   constructor(userID: string, email: string, passwordHash: string, name: string, phone: string | null, createdAt: Date) {
     this.userID = userID

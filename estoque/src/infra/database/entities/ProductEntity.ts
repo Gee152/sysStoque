@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToMany, Relation } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany, Relation } from "typeorm";
 // 1. A palavra 'type' foi adicionada aqui nas duas importações
 import type { ProductVariantEntity } from "./ProductVariantEntity.js";
 import type { UserEntity } from "./UserEntity.js";
@@ -33,6 +33,9 @@ export class ProductEntity {
 
   @CreateDateColumn({ name: "created_at" })
   public createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  public updatedAt!: Date;
 
   // 3. Mudamos de () => ProductVariantEntity para a string "ProductVariantEntity"
   @OneToMany("ProductVariantEntity", (variant: ProductVariantEntity) => variant.product)

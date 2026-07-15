@@ -5,6 +5,7 @@ export class UserAssociation {
   public name: string
   public phone: string | null
   public createdAt: Date
+  public updatedAt: Date
 
   constructor(
     userID: string,
@@ -12,7 +13,8 @@ export class UserAssociation {
     passwordHash: string,
     name: string,
     phone: string | null,
-    createdAt: Date
+    createdAt: Date,
+    updatedAt: Date
   ) {
     this.userID = userID
     this.email = email
@@ -20,6 +22,7 @@ export class UserAssociation {
     this.name = name
     this.phone = phone
     this.createdAt = createdAt
+    this.updatedAt = updatedAt
   }
 
   get id(): string {
@@ -36,6 +39,7 @@ export class ProductAssociation {
   public salePrice: number
   public imageUrl: string | null
   public createdAt: Date
+  public updatedAt: Date
 
   constructor(
     id: string,
@@ -45,7 +49,8 @@ export class ProductAssociation {
     costPrice: number,
     salePrice: number,
     imageUrl: string | null,
-    createdAt: Date
+    createdAt: Date,
+    updatedAt: Date
   ) {
     this.id = id
     this.userId = userId
@@ -55,6 +60,7 @@ export class ProductAssociation {
     this.salePrice = salePrice
     this.imageUrl = imageUrl
     this.createdAt = createdAt
+    this.updatedAt = updatedAt
   }
 }
 
@@ -66,6 +72,7 @@ export class ProductVariantAssociation {
   public stock: number
   public imageUrl: string | null
   public createdAt: Date
+  public updatedAt: Date
 
   constructor(
     id: string,
@@ -74,7 +81,8 @@ export class ProductVariantAssociation {
     color: string,
     stock: number,
     imageUrl: string | null,
-    createdAt: Date
+    createdAt: Date,
+    updatedAt: Date
   ) {
     this.id = id
     this.productId = productId
@@ -83,6 +91,7 @@ export class ProductVariantAssociation {
     this.stock = stock
     this.imageUrl = imageUrl
     this.createdAt = createdAt
+    this.updatedAt = updatedAt
   }
 }
 
@@ -95,6 +104,7 @@ export class MovementAssociation {
   public quantity: number
   public reason: string
   public createdAt: Date
+  public updatedAt: Date
 
   constructor(
     id: string,
@@ -104,7 +114,8 @@ export class MovementAssociation {
     type: "IN" | "OUT",
     quantity: number,
     reason: string,
-    createdAt: Date
+    createdAt: Date,
+    updatedAt: Date
   ) {
     this.id = id
     this.variantId = variantId
@@ -114,5 +125,6 @@ export class MovementAssociation {
     this.quantity = quantity
     this.reason = reason
     this.createdAt = createdAt
+    this.updatedAt = updatedAt
   }
 }

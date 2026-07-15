@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, Unique, Relation } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, Unique, Relation } from "typeorm";
 // 1. A palavra 'type' precisa estar aqui logo após o import
 import type { ProductEntity } from "./ProductEntity.js";
 
@@ -30,6 +30,9 @@ export class ProductVariantEntity {
 
   @CreateDateColumn({ name: "created_at" })
   public createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  public updatedAt!: Date;
 
   constructor(variantId: string, productId: string, product: ProductEntity, size: string, color: string, stock: number, imageUrl: string | null, createdAt: Date) {
     this.variantId = variantId;

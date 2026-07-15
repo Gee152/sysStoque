@@ -8,7 +8,8 @@ export function toUserDomain(e: UserEntity): UserAssociation {
     e.passwordHash,
     e.name,
     e.phone,
-    e.createdAt
+    e.createdAt,
+    e.updatedAt
   )
 }
 

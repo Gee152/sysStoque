@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm";
 import { ProductVariantEntity } from "./ProductVariantEntity.js";
 import { ProductEntity } from "./ProductEntity.js";
 import { UserEntity } from "./UserEntity.js";
@@ -40,6 +40,9 @@ export class MovementEntity {
 
   @CreateDateColumn({ name: "created_at" })
   public createdAt!: Date;
+
+  @UpdateDateColumn({ name: "updated_at" })
+  public updatedAt!: Date;
 
   constructor(movementId: string, variantId: string, variant: ProductVariantEntity, productId: string, product: ProductEntity, userId: string, user: UserEntity, type: "IN" | "OUT", quantity: number, reason: string, createdAt: Date) {
     this.movementId = movementId;

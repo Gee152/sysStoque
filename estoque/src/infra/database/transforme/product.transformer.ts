@@ -10,7 +10,8 @@ export function toProductDomain(e: ProductEntity): ProductAssociation {
     e.costPrice,
     e.salePrice,
     e.imageUrl,
-    e.createdAt
+    e.createdAt,
+    e.updatedAt
   )
 }
 

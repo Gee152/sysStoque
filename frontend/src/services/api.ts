@@ -166,6 +166,26 @@ export async function createProduct(productData: {
   return transformProduct(data);
 }
 
+export async function updateProduct(productId: string, productData: {
+  name?: string;
+  category?: string;
+  costPrice?: number;
+  salePrice?: number;
+  imageUrl?: string;
+}) {
+  const data = await request<any>(`/products/${productId}`, {
+    method: "PUT",
+    body: JSON.stringify(productData),
+  });
+  return transformProduct(data);
+}
+
+export async function deleteProduct(productId: string) {
+  await request<void>(`/products/${productId}`, {
+    method: "DELETE",
+  });
+}
+
 // --- Movements ---
 function transformMovement(m: any): Movement {
   return {
