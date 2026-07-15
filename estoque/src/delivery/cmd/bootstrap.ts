@@ -1,6 +1,5 @@
 import "reflect-metadata"
 import express from "express"
-import cors from "cors"
 import dotenv from "dotenv"
 import { getDataSource } from "../../infra/database/data-source.js"
 import { errorHandler } from "../middlewares/errorHandler.js"
@@ -11,11 +10,16 @@ dotenv.config()
 export async function createApp(): Promise<express.Application> {
   const app = express()
 
-  const corsOrigin = process.env.CORS_ORIGIN || '*'
-  app.use(cors({
-    origin: corsOrigin === '*' ? '*' : corsOrigin.split(',').map(o => o.trim()),
-    credentials: corsOrigin !== '*',
-  }))
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    if (req.method === 'OPTIONS') {
+      res.status(204).end()
+      return
+    }
+    next()
+  })
 
   app.use(express.json())
 
