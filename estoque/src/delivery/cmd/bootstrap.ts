@@ -11,9 +11,10 @@ dotenv.config()
 export async function createApp(): Promise<express.Application> {
   const app = express()
 
-  // CORS simplificado: O asterisco '*' libera a API para receber requisições de qualquer lugar
+  const corsOrigin = process.env.CORS_ORIGIN || '*'
   app.use(cors({
-    origin: '*'
+    origin: corsOrigin === '*' ? '*' : corsOrigin.split(',').map(o => o.trim()),
+    credentials: corsOrigin !== '*',
   }))
 
   app.use(express.json())
