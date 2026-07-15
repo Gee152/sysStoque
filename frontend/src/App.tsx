@@ -25,6 +25,7 @@ import DashboardView from "./components/DashboardView";
 import ProductsView from "./components/ProductsView";
 import MovementsView from "./components/MovementsView";
 import SharedProductView from "./components/SharedProductView";
+import PwaInstallBanner from "./components/PwaInstallBanner";
 import { getProducts, getDashboard, createProduct, updateProduct, deleteProduct, createMovement, setOnUnauthorized } from "./services/api";
 
 export default function App() {
@@ -421,6 +422,7 @@ export default function App() {
           </main>
         </div>
       )}
+      <PwaInstallBanner />
     </div>
   );
 }
