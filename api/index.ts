@@ -1,6 +1,6 @@
 import "reflect-metadata"
 import type { Application } from "express"
-import { createApp } from "../estoque/src/delivery/cmd/bootstrap.js"
+import { createApp } from "../estoque/dist/delivery/cmd/bootstrap.js"
 
 let app: Application | null = null
 
