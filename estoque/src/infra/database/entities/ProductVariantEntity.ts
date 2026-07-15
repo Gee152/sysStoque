@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, Unique, Relation } from "typeorm";
-// 1. Adicionado o 'type' na importação
-import { ProductEntity } from "./ProductEntity.js";
+// 1. A palavra 'type' precisa estar aqui logo após o import
+import type { ProductEntity } from "./ProductEntity.js";
 
 @Entity("product_variants")
 @Unique(["product", "size", "color"])
@@ -11,8 +11,8 @@ export class ProductVariantEntity {
   @Column('uuid', { name: "product_id" })
   public productId!: string;
 
-  // 2. O decorador continua igual, mas usamos Relation<> na tipagem da variável
-  @ManyToOne(() => ProductEntity, (product) => product.variants)
+  // 2. Aqui mudamos de () => ProductEntity para a string "ProductEntity"
+  @ManyToOne("ProductEntity", (product: ProductEntity) => product.variants)
   @JoinColumn({ name: "product_id" })
   public product!: Relation<ProductEntity>;
 

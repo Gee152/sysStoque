@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, OneToMany, Relation } from "typeorm";
-// 1. Adicionado o 'type' nas importações relacionadas
+// 1. A palavra 'type' foi adicionada aqui nas duas importações
 import type { ProductVariantEntity } from "./ProductVariantEntity.js";
-import { UserEntity } from "./UserEntity.js";
+import type { UserEntity } from "./UserEntity.js";
 
 @Entity("products")
 export class ProductEntity {
@@ -11,8 +11,8 @@ export class ProductEntity {
   @Column('uuid', { name: "user_id" })
   public userId!: string;
 
-  // 2. Envolvido com Relation<>
-  @ManyToOne(() => UserEntity)
+  // 2. Mudamos de () => UserEntity para a string "UserEntity"
+  @ManyToOne("UserEntity")
   @JoinColumn({ name: "user_id" })
   public user!: Relation<UserEntity>;
 
@@ -34,8 +34,8 @@ export class ProductEntity {
   @CreateDateColumn({ name: "created_at" })
   public createdAt!: Date;
 
-  // 3. Envolvido com Relation<> para o array de variantes
-  @OneToMany(() => ProductVariantEntity, (variant) => variant.product)
+  // 3. Mudamos de () => ProductVariantEntity para a string "ProductVariantEntity"
+  @OneToMany("ProductVariantEntity", (variant: ProductVariantEntity) => variant.product)
   public variants!: Relation<ProductVariantEntity[]>;
 
   constructor(productId: string, userId: string, name: string, category: string, costPrice: number, salePrice: number, imageUrl: string, createdAt: Date) {
