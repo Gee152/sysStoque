@@ -48,9 +48,8 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Vestuário");
-  const [sku, setSku] = useState("");
   const [variantsForm, setVariantsForm] = useState<any[]>([
-    { name: "Padrão", sku: "", price: "", stock: "", image: null, imagePreview: "" }
+    { name: "Padrão", price: "", stock: "", image: null, imagePreview: "" }
   ]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -81,8 +80,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
       p.description.toLowerCase().includes(search.toLowerCase()) ||
-      p.sku.toLowerCase().includes(search.toLowerCase()) ||
-      p.variants.some(v => v.sku.toLowerCase().includes(search.toLowerCase()) || v.name.toLowerCase().includes(search.toLowerCase()));
+      p.variants.some(v => v.name.toLowerCase().includes(search.toLowerCase()));
 
     const matchesCategory = selectedCategory === "TODAS" || p.category === selectedCategory;
 
@@ -94,7 +92,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
   };
 
   const handleAddVariantRow = () => {
-    setVariantsForm([...variantsForm, { name: "", sku: "", price: "", stock: "", image: null, imagePreview: "" }]);
+    setVariantsForm([...variantsForm, { name: "", price: "", stock: "", image: null, imagePreview: "" }]);
   };
 
   const handleRemoveVariantRow = (idx: number) => {
@@ -129,8 +127,8 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
     setLoading(true);
 
     // Validation
-    if (!name || !category || !sku) {
-      setFormError("Nome, Categoria e SKU base são obrigatórios.");
+    if (!name || !category) {
+      setFormError("Nome e Categoria são obrigatórios.");
       setLoading(false);
       return;
     }
@@ -150,7 +148,6 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
 
       return {
         name: v.name || "Padrão",
-        sku: v.sku || `${sku}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
         price: Number(v.price) || 0,
         stock: Number(v.stock) || 0,
         imageUrl,
@@ -164,7 +161,6 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
         name,
         description,
         category,
-        sku: sku.toUpperCase(),
         variants: formattedVariants,
       });
 
@@ -172,8 +168,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
       setName("");
       setDescription("");
       setCategory("Vestuário");
-      setSku("");
-      setVariantsForm([{ name: "Padrão", sku: "", price: "", stock: "", image: null, imagePreview: "" }]);
+      setVariantsForm([{ name: "Padrão", price: "", stock: "", image: null, imagePreview: "" }]);
       setShowAddModal(false);
       notify.success("Produto criado com sucesso!");
     } catch (err: any) {
@@ -273,7 +268,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
           <input
             id="prod-input-search"
             type="text"
-            placeholder="Buscar por nome, SKU, variante..."
+            placeholder="Buscar por nome, variante..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-600 shadow-3xs"
@@ -331,8 +326,8 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
                       <h3 className="font-bold text-xs text-slate-800 dark:text-slate-200 truncate max-w-[190px]">
                         {product.name}
                       </h3>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                        SKU: {product.sku}
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                        {product.variants.length} variante(s)
                       </p>
                     </div>
                   </div>
@@ -446,7 +441,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
                               ) : null}
                               <div className="flex-1 min-w-0">
                                 <p className="font-bold text-xs text-slate-800 dark:text-slate-200">{v.name}</p>
-                                <p className="text-[9px] font-mono text-slate-400 dark:text-slate-500 mt-0.5">SKU: {v.sku}</p>
+                                <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 font-mono">{v.id.slice(0, 8)}</p>
                               </div>
                               <div className="text-right shrink-0">
                                 <p className="font-mono font-bold text-xs text-emerald-600 dark:text-emerald-400">
@@ -607,18 +602,6 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
                     </select>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">SKU Base *</label>
-                    <input
-                      id="form-product-sku"
-                      type="text"
-                      required
-                      placeholder="Ex: CAN-CER"
-                      value={sku}
-                      onChange={(e) => setSku(e.target.value)}
-                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-600 uppercase font-mono"
-                    />
-                  </div>
                 </div>
 
                 <div className="space-y-1">
@@ -710,16 +693,6 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
                               />
                             </label>
                           </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <input
-                            type="text"
-                            placeholder="SKU específico (vazio p/ auto)"
-                            value={v.sku}
-                            onChange={(e) => handleVariantChange(idx, "sku", e.target.value)}
-                            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1.5 text-[11px] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600 font-mono"
-                          />
                         </div>
 
                         <div className="grid grid-cols-2 gap-1">

@@ -123,7 +123,6 @@ function transformProduct(p: any) {
           ? `${v.size} / ${v.color}`
           : v.size
         : "Padrão"),
-    sku: v.sku || v.id,
     price: v.price ?? p.salePrice ?? 0,
     stock: v.stock ?? 0,
     imageUrl: v.imageUrl || null,
@@ -136,7 +135,6 @@ function transformProduct(p: any) {
     name: p.name,
     description: p.description || "",
     category: p.category || "",
-    sku: p.sku || p.id,
     createdAt: p.createdAt || new Date().toISOString(),
     updatedAt: p.updatedAt || p.createdAt || new Date().toISOString(),
     variants,
@@ -152,8 +150,7 @@ export async function createProduct(productData: {
   name: string;
   description?: string;
   category: string;
-  sku?: string;
-  variants: { name: string; sku?: string; price: number; stock: number; imageUrl?: string | null }[];
+  variants: { name: string; price: number; stock: number; imageUrl?: string | null }[];
 }) {
   const body = {
     name: productData.name,

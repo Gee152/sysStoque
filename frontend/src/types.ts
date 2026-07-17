@@ -12,8 +12,7 @@ export interface User {
 export interface ProductVariant {
   id: string;
   productId: string;
-  name: string; // e.g., "Tamanho M - Azul", "110V"
-  sku: string;
+  name: string;
   price: number;
   stock: number;
   imageUrl?: string | null;
@@ -26,7 +25,6 @@ export interface Product {
   name: string;
   description: string;
   category: string;
-  sku: string; // Base SKU or unique product identifier
   createdAt: string;
   updatedAt: string;
   variants: ProductVariant[];

@@ -334,7 +334,7 @@ export default function MovementsView({ movements, products, onAddMovement }: Mo
                       className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600 disabled:opacity-40"
                     >
                       {variants.map(v => (
-                        <option key={v.id} value={v.id}>{v.name} (Atual: {v.stock} un • SKU: {v.sku})</option>
+                        <option key={v.id} value={v.id}>{v.name} (Estoque: {v.stock} un)</option>
                       ))}
                     </select>
                   </div>
