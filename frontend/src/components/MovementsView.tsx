@@ -17,6 +17,7 @@ import {
   AlertCircle 
 } from "lucide-react";
 import { Movement, Product } from "../types";
+import { useNotification } from "./Notification";
 
 interface MovementsViewProps {
   movements: Movement[];
@@ -25,6 +26,7 @@ interface MovementsViewProps {
 }
 
 export default function MovementsView({ movements, products, onAddMovement }: MovementsViewProps) {
+  const { notify } = useNotification();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"ALL" | "IN" | "OUT">("ALL");
 
@@ -105,6 +107,7 @@ export default function MovementsView({ movements, products, onAddMovement }: Mo
       setQuantity("1");
       setReason("Reposição de Estoque");
       setShowAddModal(false);
+      notify.success("Movimentação registrada com sucesso!");
     } catch (err: any) {
       setFormError(err.message || "Erro ao registrar movimentação.");
     } finally {

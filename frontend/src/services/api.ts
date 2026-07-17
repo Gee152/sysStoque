@@ -134,8 +134,9 @@ function transformProduct(p: any) {
 }
 
 export async function getProducts() {
-  const data = await request<any[]>("/products");
-  return data.map(transformProduct);
+  const data = await request<any>("/products");
+  const list = Array.isArray(data) ? data : data.products ?? [];
+  return list.map(transformProduct);
 }
 
 export async function createProduct(productData: {
@@ -233,10 +234,11 @@ export async function createMovement(data: {
 
 // --- Dashboard ---
 export async function getDashboard(existingProducts?: any[]): Promise<DashboardMetrics> {
-  const rawProducts = existingProducts ?? await request<any[]>("/products");
+  const rawProducts = existingProducts ?? await request<any>("/products");
+  const list = Array.isArray(rawProducts) ? rawProducts : rawProducts.products ?? [];
   const movements = await request<any[]>("/movements");
 
-  const typedProducts = rawProducts.map(transformProduct);
+  const typedProducts = list.map(transformProduct);
   const typedMovements = movements.map(transformMovement);
 
   let totalVariants = 0;

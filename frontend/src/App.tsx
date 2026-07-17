@@ -26,6 +26,7 @@ import ProductsView from "./components/ProductsView";
 import MovementsView from "./components/MovementsView";
 import SharedProductView from "./components/SharedProductView";
 import PwaInstallBanner from "./components/PwaInstallBanner";
+import { NotificationProvider } from "./components/Notification";
 import { getProducts, getDashboard, createProduct, updateProduct, deleteProduct, createMovement, setOnUnauthorized } from "./services/api";
 
 export default function App() {
@@ -322,6 +323,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-100/60 dark:bg-slate-950 transition-colors">
+      <NotificationProvider>
       {!token ? (
         <div className="min-h-dynamic flex items-center justify-center p-4">
           <div className="w-full max-w-md">
@@ -423,6 +425,7 @@ export default function App() {
         </div>
       )}
       <PwaInstallBanner />
+      </NotificationProvider>
     </div>
   );
 }

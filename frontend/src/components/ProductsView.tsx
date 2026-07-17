@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useNotification } from "./Notification";
 import { 
   Plus, 
   Search, 
@@ -174,6 +175,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
       setSku("");
       setVariantsForm([{ name: "Padrão", sku: "", price: "", stock: "", image: null, imagePreview: "" }]);
       setShowAddModal(false);
+      notify.success("Produto criado com sucesso!");
     } catch (err: any) {
       setFormError(err.message || "Erro ao adicionar produto.");
     } finally {
@@ -190,6 +192,8 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
     setShowEditModal(true);
   };
 
+  const { notify } = useNotification();
+
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
@@ -203,8 +207,9 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
       });
       setShowEditModal(false);
       setEditingProduct(null);
+      notify.success("Produto atualizado com sucesso!");
     } catch (err: any) {
-      alert(err.message || "Erro ao atualizar produto.");
+      notify.error(err.message || "Erro ao atualizar produto.");
     } finally {
       setEditLoading(false);
     }
@@ -215,8 +220,9 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
     try {
       await onDeleteProduct(productId);
       setDeleteConfirmId(null);
+      notify.success("Produto excluído com sucesso!");
     } catch (err: any) {
-      alert(err.message || "Erro ao excluir produto.");
+      notify.error(err.message || "Erro ao excluir produto.");
     } finally {
       setDeleteLoading(false);
     }
@@ -232,8 +238,9 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
       // reset quick movement inputs for this variant
       setQuickMoveQty(prev => ({ ...prev, [variantId]: 1 }));
       setQuickMoveReason(prev => ({ ...prev, [variantId]: "" }));
+      notify.success("Movimentação registrada com sucesso!");
     } catch (err: any) {
-      alert(err.message || "Erro ao realizar movimentação.");
+      notify.error(err.message || "Erro ao realizar movimentação.");
     } finally {
       setQuickMoveLoading(prev => ({ ...prev, [variantId]: false }));
     }
