@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Phone, Package, Calendar, X, Check, ChevronRight, Clock, AlertCircle, MessageCircle, Send, ListTodo, TrendingUp, XCircle } from "lucide-react";
+import { Plus, Phone, Package, Calendar, X, Check, ChevronRight, Clock, AlertCircle, MessageCircle, Send, ListTodo, TrendingUp, XCircle, Pencil } from "lucide-react";
 import type { ClientFlow, ClientFlowStatus, Product } from "../types";
 import { useNotification } from "./Notification";
 
@@ -29,20 +29,22 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
   }, [flows]);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showNoteModal, setShowNoteModal] = useState(false);
-  const [pendingFlow, setPendingFlow] = useState<ClientFlow | null>(null);
-  const [noteDescription, setNoteDescription] = useState("");
-  const [noteFollowUp, setNoteFollowUp] = useState("");
+  const [moveModal, setMoveModal] = useState<{ flow: ClientFlow; targetStatus: ClientFlowStatus } | null>(null);
+  const [editModal, setEditModal] = useState<ClientFlow | null>(null);
+  const [modalDescription, setModalDescription] = useState("");
+  const [modalFollowUp, setModalFollowUp] = useState("");
 
   // Form state
   const [formProduct, setFormProduct] = useState("");
   const [formName, setFormName] = useState("");
   const [formContact, setFormContact] = useState("");
   const [formDesc, setFormDesc] = useState("");
+  const [modalError, setModalError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const draggedItem = useRef<{ id: string; status: ClientFlowStatus } | null>(null);
+  const touchDrag = useRef<{ id: string; status: ClientFlowStatus; startY: number } | null>(null);
 
   const flowsArray = Array.isArray(localFlows) ? localFlows : [];
   const grouped = flowsArray.reduce((acc, f) => {
@@ -72,78 +74,142 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
     draggedItem.current = { id: flow.id, status: flow.currentStatus as ClientFlowStatus };
   };
 
+  const handleTouchStart = (flow: ClientFlow) => {
+    touchDrag.current = { id: flow.id, status: flow.currentStatus as ClientFlowStatus, startY: 0 };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchDrag.current) return;
+    const dy = Math.abs(e.touches[0].clientY - touchDrag.current.startY);
+    const dx = Math.abs(e.touches[0].clientX - (touchDrag.current as any).startX || 0);
+    if (dy > 10 || dx > 10) {
+      e.preventDefault();
+    }
+    (touchDrag.current as any).startX = e.touches[0].clientX;
+    touchDrag.current.startY = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchDrag.current) return;
+    const target = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+    const columnEl = target?.closest("[data-column-status]") as HTMLElement | null;
+    const targetStatus = columnEl?.dataset.columnStatus as ClientFlowStatus | undefined;
+
+    if (targetStatus && targetStatus !== touchDrag.current.status) {
+      draggedItem.current = { id: touchDrag.current.id, status: touchDrag.current.status };
+      handleDrop(targetStatus);
+    }
+
+    touchDrag.current = null;
+  };
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  const handleDrop = async (targetStatus: ClientFlowStatus) => {
+  const handleDrop = (targetStatus: ClientFlowStatus) => {
     const item = draggedItem.current;
     if (!item || item.status === targetStatus) {
       draggedItem.current = null;
       return;
     }
 
-    // RN-001: NOTAS requires follow-up date + description
-    if (targetStatus === "NOTAS") {
-      const flow = localFlows.find(f => f.id === item.id);
-      if (flow) {
-        setPendingFlow(flow);
-        setNoteDescription(flow.description || "");
-        setNoteFollowUp("");
-        setShowNoteModal(true);
-      }
-      draggedItem.current = null;
-      return;
-    }
-
-    // Optimistic update
-    setLocalFlows(prev => prev.map(f =>
-      f.id === item.id ? { ...f, currentStatus: targetStatus } : f
-    ));
-
-    try {
-      await onUpdateStatus(item.id, { currentStatus: targetStatus });
-    } catch {
-      setLocalFlows(prev => prev.map(f =>
-        f.id === item.id ? { ...f, currentStatus: item.status } : f
-      ));
+    const flow = localFlows.find(f => f.id === item.id);
+    if (flow) {
+      setMoveModal({ flow, targetStatus });
+      setModalDescription(flow.description || "");
+      setModalFollowUp("");
+      setModalError(null);
     }
     draggedItem.current = null;
   };
 
-  const handleNoteSubmit = async () => {
-    if (!pendingFlow || !noteFollowUp) {
-      setFormError("Data de retorno obrigatória.");
-      return;
-    }
-    if (!noteDescription.trim()) {
-      setFormError("Descrição da objeção obrigatória.");
-      return;
-    }
+  const handleMoveConfirm = async () => {
+    if (!moveModal) return;
+    const { flow, targetStatus } = moveModal;
 
-    const followUpDate = new Date(noteFollowUp);
-    if (followUpDate <= new Date()) {
-      setFormError("A data de retorno não pode estar no passado.");
-      return;
+    if (targetStatus === "NOTAS") {
+      if (!modalFollowUp) {
+        setModalError("Data de retorno obrigatória.");
+        return;
+      }
+      if (!modalDescription.trim()) {
+        setModalError("Descrição da objeção obrigatória.");
+        return;
+      }
+
+      const followUpDate = new Date(modalFollowUp);
+      if (followUpDate <= new Date()) {
+        setModalError("A data de retorno não pode estar no passado.");
+        return;
+      }
     }
 
     setLocalFlows(prev => prev.map(f =>
-      f.id === pendingFlow.id ? { ...f, currentStatus: "NOTAS" as ClientFlowStatus, description: noteDescription, nextFollowUpAt: noteFollowUp } : f
+      f.id === flow.id ? { ...f, currentStatus: targetStatus, description: modalDescription, nextFollowUpAt: targetStatus === "NOTAS" ? modalFollowUp : f.nextFollowUpAt } : f
     ));
 
     try {
-      await onUpdateStatus(pendingFlow.id, { currentStatus: "NOTAS", description: noteDescription, nextFollowUpAt: noteFollowUp });
-      setShowNoteModal(false);
-      setPendingFlow(null);
-      setNoteDescription("");
-      setNoteFollowUp("");
-      setFormError(null);
-      notify.success("Card movido para Notas.");
+      const data: { currentStatus: ClientFlowStatus; description?: string; nextFollowUpAt?: string } = { currentStatus: targetStatus };
+      if (modalDescription.trim()) data.description = modalDescription;
+      if (targetStatus === "NOTAS" && modalFollowUp) data.nextFollowUpAt = modalFollowUp;
+      await onUpdateStatus(flow.id, data);
+      setMoveModal(null);
+      setModalDescription("");
+      setModalFollowUp("");
+      setModalError(null);
+      notify.success(`Card movido para ${COLUMNS.find(c => c.id === targetStatus)?.label}.`);
     } catch {
       setLocalFlows(prev => prev.map(f =>
-        f.id === pendingFlow.id ? { ...f, currentStatus: pendingFlow.currentStatus as ClientFlowStatus, description: pendingFlow.description, nextFollowUpAt: pendingFlow.nextFollowUpAt } : f
+        f.id === flow.id ? { ...f, currentStatus: flow.currentStatus as ClientFlowStatus, description: flow.description, nextFollowUpAt: flow.nextFollowUpAt } : f
       ));
     }
+  };
+
+  const handleMoveCancel = () => {
+    setMoveModal(null);
+    setModalDescription("");
+    setModalFollowUp("");
+    setModalError(null);
+  };
+
+  const handleEditOpen = (flow: ClientFlow) => {
+    setEditModal(flow);
+    setModalDescription(flow.description || "");
+    setModalFollowUp(flow.nextFollowUpAt || "");
+    setModalError(null);
+  };
+
+  const handleEditSave = async () => {
+    if (!editModal) return;
+    const flow = editModal;
+
+    setLocalFlows(prev => prev.map(f =>
+      f.id === flow.id ? { ...f, description: modalDescription, nextFollowUpAt: modalFollowUp } : f
+    ));
+
+    try {
+      const data: { currentStatus: ClientFlowStatus; description?: string; nextFollowUpAt?: string } = { currentStatus: flow.currentStatus as ClientFlowStatus };
+      if (modalDescription !== flow.description) data.description = modalDescription;
+      if (modalFollowUp !== flow.nextFollowUpAt) data.nextFollowUpAt = modalFollowUp;
+      await onUpdateStatus(flow.id, data);
+      setEditModal(null);
+      setModalDescription("");
+      setModalFollowUp("");
+      setModalError(null);
+      notify.success("Lead atualizado.");
+    } catch {
+      setLocalFlows(prev => prev.map(f =>
+        f.id === flow.id ? { ...f, description: flow.description, nextFollowUpAt: flow.nextFollowUpAt } : f
+      ));
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditModal(null);
+    setModalDescription("");
+    setModalFollowUp("");
+    setModalError(null);
   };
 
   const handleCreateFlow = async (e: React.FormEvent) => {
@@ -202,6 +268,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
           return (
             <div
               key={col.id}
+              data-column-status={col.id}
               onDragOver={handleDragOver}
               onDrop={() => handleDrop(col.id)}
               className={`rounded-xl border border-slate-200 dark:border-slate-700 border-t-4 ${col.color} min-h-[300px] flex flex-col`}
@@ -234,6 +301,9 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                       animate={{ opacity: 1, y: 0 }}
                       draggable
                       onDragStart={() => handleDragStart(flow)}
+                      onTouchStart={() => handleTouchStart(flow)}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
                       className="p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-3xs hover:shadow-xs transition-shadow cursor-grab active:cursor-grabbing space-y-2"
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -244,7 +314,16 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                             <span className="text-[9px] text-slate-500 dark:text-slate-400 font-mono truncate">{formatPhone(flow.clientContact)}</span>
                           </div>
                         </div>
-                        <span className="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{formatDate(flow.createdAt)}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleEditOpen(flow); }}
+                            className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                            title="Editar lead"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <span className="text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap">{formatDate(flow.createdAt)}</span>
+                        </div>
                       </div>
 
                       {product && (
@@ -375,9 +454,9 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
         )}
       </AnimatePresence>
 
-      {/* NOTE MODAL (for NOTAS status) */}
+      {/* MOVE MODAL — opens on every column drop */}
       <AnimatePresence>
-        {showNoteModal && pendingFlow && (
+        {moveModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -391,62 +470,144 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
               className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-slate-200 dark:border-slate-700"
             >
               <div className="flex items-center gap-2">
-                <div className="p-1.5 rounded-full bg-purple-50 dark:bg-purple-900/20">
-                  <ListTodo className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <div className="p-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20">
+                  <ChevronRight className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Mover para Notas</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Mover para {COLUMNS.find(c => c.id === moveModal.targetStatus)?.label}
+                </h3>
               </div>
 
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Lead: <strong className="text-slate-700 dark:text-slate-300">{pendingFlow.clientName}</strong>
+                Lead: <strong className="text-slate-700 dark:text-slate-300">{moveModal.flow.clientName}</strong>
               </p>
 
-              {formError && (
+              {modalError && (
                 <div className="flex items-start gap-1.5 p-2 text-[10px] rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400">
                   <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
-                  <span>{formError}</span>
+                  <span>{modalError}</span>
                 </div>
               )}
 
               <div className="space-y-2">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Descrição da Objeção *</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">
+                    {moveModal.targetStatus === "NOTAS" ? "Descrição da Objeção *" : "Observação"}
+                  </label>
                   <textarea
-                    required
                     rows={3}
-                    placeholder="Por que o lead não fechou? Qual objeção?"
-                    value={noteDescription}
-                    onChange={e => setNoteDescription(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-purple-500"
+                    placeholder={moveModal.targetStatus === "NOTAS" ? "Por que o lead não fechou? Qual objeção?" : "Informações sobre o movimento..."}
+                    value={modalDescription}
+                    onChange={e => setModalDescription(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Data de Retorno *</label>
-                  <input
-                    type="datetime-local"
-                    required
-                    value={noteFollowUp}
-                    onChange={e => setNoteFollowUp(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-purple-500"
-                  />
-                  <p className="text-[9px] text-slate-400">Não pode ser no passado.</p>
-                </div>
+                {moveModal.targetStatus === "NOTAS" && (
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Data de Retorno *</label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={modalFollowUp}
+                      onChange={e => setModalFollowUp(e.target.value)}
+                      className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-purple-500"
+                    />
+                    <p className="text-[9px] text-slate-400">Não pode ser no passado.</p>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2 pt-1">
                 <button
-                  onClick={() => { setShowNoteModal(false); setPendingFlow(null); setNoteDescription(""); setNoteFollowUp(""); setFormError(null); }}
+                  onClick={handleMoveCancel}
                   className="flex-1 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg text-xs transition-all"
                 >
                   Cancelar
                 </button>
                 <button
-                  onClick={handleNoteSubmit}
-                  className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg text-xs transition-all flex items-center justify-center gap-1"
+                  onClick={handleMoveConfirm}
+                  className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs transition-all flex items-center justify-center gap-1"
                 >
                   <Check className="w-3 h-3" />
-                  Confirmar
+                  Mover
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* EDIT MODAL — opens on pencil click */}
+      <AnimatePresence>
+        {editModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl p-5 max-w-xs w-full space-y-3 shadow-xl border border-slate-200 dark:border-slate-700"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-700">
+                  <Pencil className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Editar Lead</h3>
+              </div>
+
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                <strong className="text-slate-700 dark:text-slate-300">{editModal.clientName}</strong>
+                <span className="ml-1">· {formatPhone(editModal.clientContact)}</span>
+              </p>
+
+              {modalError && (
+                <div className="flex items-start gap-1.5 p-2 text-[10px] rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400">
+                  <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
+                  <span>{modalError}</span>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Observação</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Informações do lead..."
+                    value={modalDescription}
+                    onChange={e => setModalDescription(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Data de Retorno</label>
+                  <input
+                    type="datetime-local"
+                    value={modalFollowUp}
+                    onChange={e => setModalFollowUp(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={handleEditCancel}
+                  className="flex-1 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 font-semibold rounded-lg text-xs transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleEditSave}
+                  className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs transition-all flex items-center justify-center gap-1"
+                >
+                  <Check className="w-3 h-3" />
+                  Salvar
                 </button>
               </div>
             </motion.div>
