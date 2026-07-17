@@ -1,4 +1,4 @@
-import type { Movement, DashboardMetrics } from "../types";
+import type { Movement, DashboardMetrics, ClientFlow, ClientFlowStatus } from "../types";
 
 const API_BASE = "/api";
 
@@ -310,6 +310,38 @@ export interface PublicProductData {
     price: number;
     imageUrl: string | null;
   }[];
+}
+
+// --- Client Flow (Leads / Kanban) ---
+export async function createClientFlow(data: {
+  productId: string;
+  clientName: string;
+  clientContact: string;
+  description?: string;
+}): Promise<ClientFlow> {
+  return request<ClientFlow>("/client-flow", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function listClientFlows(): Promise<ClientFlow[]> {
+  return request<ClientFlow[]>("/client-flow");
+}
+
+export async function updateClientFlowStatus(id: string, data: {
+  currentStatus: ClientFlowStatus;
+  description?: string;
+  nextFollowUpAt?: string;
+}): Promise<ClientFlow> {
+  return request<ClientFlow>(`/client-flow/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function trackClientFlow(token: string): Promise<void> {
+  await fetch(`${API_BASE}/client-flow/track/${token}`, { method: "PUT" });
 }
 
 export async function getPublicProduct(productId: string): Promise<PublicProductData> {

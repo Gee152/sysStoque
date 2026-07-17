@@ -15,10 +15,11 @@ import {
 
 interface SharedProductViewProps {
   productId: string;
+  trackingToken?: string | null;
   onBack?: () => void;
 }
 
-export default function SharedProductView({ productId, onBack }: SharedProductViewProps) {
+export default function SharedProductView({ productId, trackingToken, onBack }: SharedProductViewProps) {
   const [product, setProduct] = useState<PublicProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +29,10 @@ export default function SharedProductView({ productId, onBack }: SharedProductVi
 
   useEffect(() => {
     loadProduct();
-  }, [productId]);
+    if (trackingToken) {
+      fetch(`/api/client-flow/track/${trackingToken}`, { method: "PUT" }).catch(() => {});
+    }
+  }, [productId, trackingToken]);
 
   const loadProduct = async () => {
     setLoading(true);

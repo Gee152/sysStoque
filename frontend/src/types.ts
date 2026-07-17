@@ -47,6 +47,22 @@ export interface Movement {
   variantName: string;
 }
 
+export type ClientFlowStatus = "ENVIADO" | "NEGOCIANDO" | "NOTAS" | "FECHADO";
+
+export interface ClientFlow {
+  id: string;
+  trackingToken: string;
+  productId: string;
+  clientName: string;
+  clientContact: string;
+  description?: string;
+  currentStatus: ClientFlowStatus;
+  nextFollowUpAt?: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DashboardMetrics {
   totalProducts: number;
   totalVariants: number;

@@ -95,6 +95,46 @@ export class ProductVariantAssociation {
   }
 }
 
+export class ClientFlowAssociation {
+  public id: string
+  public trackingToken: string
+  public productId: string
+  public clientName: string
+  public clientContact: string
+  public userId: string
+  public description?: string
+  public currentStatus: string
+  public nextFollowUpAt?: Date
+  public createdAt: Date
+  public updatedAt: Date
+
+  constructor(
+    id: string,
+    trackingToken: string,
+    productId: string,
+    clientName: string,
+    clientContact: string,
+    userId: string,
+    description?: string,
+    currentStatus?: string,
+    nextFollowUpAt?: Date,
+    createdAt?: Date,
+    updatedAt?: Date
+  ) {
+    this.id = id
+    this.trackingToken = trackingToken
+    this.productId = productId
+    this.clientName = clientName
+    this.clientContact = clientContact
+    this.userId = userId
+    this.description = description
+    this.currentStatus = currentStatus || "ENVIADO"
+    this.nextFollowUpAt = nextFollowUpAt
+    this.createdAt = createdAt || new Date()
+    this.updatedAt = updatedAt || new Date()
+  }
+}
+
 export class MovementAssociation {
   public id: string
   public variantId: string

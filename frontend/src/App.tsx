@@ -16,19 +16,21 @@ import {
   UserCheck, 
   FileSpreadsheet, 
   RefreshCw,
-  SunMoon
+  SunMoon,
+  TrendingUp
 } from "lucide-react";
 
-import { Product, Movement, DashboardMetrics } from "./types";
+import { Product, Movement, DashboardMetrics, ClientFlow, ClientFlowStatus } from "./types";
 import AuthScreen from "./components/AuthScreen";
 import DashboardView from "./components/DashboardView";
 import ProductsView from "./components/ProductsView";
 import MovementsView from "./components/MovementsView";
 import SharedProductView from "./components/SharedProductView";
+import KanbanView from "./components/KanbanView";
 import PwaInstallBanner from "./components/PwaInstallBanner";
 import { NotificationProvider } from "./components/Notification";
 import Onboarding, { isOnboardingDone } from "./components/Onboarding";
-import { getProducts, getDashboard, createProduct, updateProduct, deleteProduct, createMovement, setOnUnauthorized } from "./services/api";
+import { getProducts, getDashboard, createProduct, updateProduct, deleteProduct, createMovement, setOnUnauthorized, listClientFlows, createClientFlow, updateClientFlowStatus } from "./services/api";
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("stockflow_token"));
@@ -48,10 +50,11 @@ export default function App() {
     localStorage.setItem("stockflow_dark", String(darkMode));
   }, [darkMode]);
 
-  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "movements" | "profile">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "movements" | "vendas" | "profile">("dashboard");
   const [products, setProducts] = useState<Product[]>([]);
   const [movements, setMovements] = useState<Movement[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [clientFlows, setClientFlows] = useState<ClientFlow[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
@@ -69,15 +72,19 @@ export default function App() {
   // Detect public share route
   const [isShareRoute, setShareRoute] = useState(false);
   const [shareProductId, setShareProductId] = useState<string | null>(null);
+  const [shareTrackingToken, setShareTrackingToken] = useState<string | null>(null);
 
   useEffect(() => {
     const match = window.location.pathname.match(/^\/compartilhar\/([a-f0-9-]+)$/i);
     if (match) {
       setShareRoute(true);
       setShareProductId(match[1]);
+      const params = new URLSearchParams(window.location.search);
+      setShareTrackingToken(params.get("track"));
     } else {
       setShareRoute(false);
       setShareProductId(null);
+      setShareTrackingToken(null);
     }
   }, []);
 
@@ -126,12 +133,16 @@ export default function App() {
     setLoading(true);
     setGlobalError(null);
     try {
-      const productsData = await getProducts();
+      const [productsData, flowsData] = await Promise.all([
+        getProducts(),
+        listClientFlows().catch(() => [] as ClientFlow[]),
+      ]);
       const dashboardData = await getDashboard(productsData);
 
       setProducts(productsData);
       setMetrics(dashboardData);
       setMovements(dashboardData.recentMovements || []);
+      setClientFlows(flowsData);
     } catch (err: any) {
       setGlobalError(err.message || "Erro ao conectar com a API.");
     } finally {
@@ -189,6 +200,25 @@ export default function App() {
     }
   };
 
+  // Client Flow handlers
+  const handleCreateFlow = async (data: { productId: string; clientName: string; clientContact: string; description?: string }) => {
+    try {
+      const newFlow = await createClientFlow(data);
+      setClientFlows(prev => [newFlow, ...prev]);
+    } catch (err: any) {
+      throw new Error(err.message || "Erro ao criar lead.");
+    }
+  };
+
+  const handleUpdateFlowStatus = async (id: string, data: { currentStatus: ClientFlowStatus; description?: string; nextFollowUpAt?: string }) => {
+    try {
+      const updated = await updateClientFlowStatus(id, data);
+      setClientFlows(prev => prev.map(f => f.id === id ? updated : f));
+    } catch (err: any) {
+      throw new Error(err.message || "Erro ao atualizar status.");
+    }
+  };
+
   // Render correct panel view
   const renderActiveView = () => {
     if (loading && !metrics) {
@@ -225,6 +255,15 @@ export default function App() {
             movements={movements} 
             products={products} 
             onAddMovement={handleAddMovement}
+          />
+        );
+      case "vendas":
+        return (
+          <KanbanView
+            flows={clientFlows}
+            products={products}
+            onCreateFlow={handleCreateFlow}
+            onUpdateStatus={handleUpdateFlowStatus}
           />
         );
       case "profile":
@@ -306,6 +345,7 @@ export default function App() {
     { id: "dashboard" as const, label: "Resumo", icon: LayoutDashboard },
     { id: "products" as const, label: "Produtos", icon: Package },
     { id: "movements" as const, label: "Histórico", icon: History },
+    { id: "vendas" as const, label: "Vendas", icon: TrendingUp },
     { id: "profile" as const, label: "Ajustes", icon: User },
   ];
 
@@ -332,7 +372,7 @@ export default function App() {
 
   // Public share route
   if (isShareRoute && shareProductId) {
-    return <SharedProductView productId={shareProductId} />;
+    return <SharedProductView productId={shareProductId} trackingToken={shareTrackingToken} />;
   }
 
   return (

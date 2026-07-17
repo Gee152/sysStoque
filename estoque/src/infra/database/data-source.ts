@@ -4,6 +4,7 @@ import { UserEntity } from "./entities/UserEntity.js";
 import { ProductEntity } from "./entities/ProductEntity.js";
 import { ProductVariantEntity } from "./entities/ProductVariantEntity.js";
 import { MovementEntity } from "./entities/MovementEntity.js";
+import { ClientFlowEntity } from "./entities/ClientFlowEntity.js";
 import dotenv from 'dotenv';
 
 // 1. Só carrega o dotenv se estiver rodando localmente na sua máquina.
@@ -22,7 +23,7 @@ export const AppDataSource = new DataSource({
   url: process.env.DATABASE_URL,
   synchronize: true,
   logging: process.env.NODE_ENV === "development",
-  entities: [UserEntity, ProductEntity, ProductVariantEntity, MovementEntity],
+  entities: [UserEntity, ProductEntity, ProductVariantEntity, MovementEntity, ClientFlowEntity],
   ssl: {
     rejectUnauthorized: false,
   },
