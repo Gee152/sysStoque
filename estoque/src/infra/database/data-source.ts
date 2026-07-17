@@ -28,8 +28,8 @@ export const AppDataSource = new DataSource({
   },
   extra: {
     max: 1,
-    idleTimeoutMillis: 3000,
-    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 15000,
   },
   migrations: [],
   subscribers: [],

@@ -102,6 +102,16 @@ export async function uploadImage(file: File): Promise<string> {
 }
 
 // --- Products ---
+function extractProductList(data: any): any[] {
+  if (Array.isArray(data)) return data;
+  const products = data.products ?? [];
+  const variants = data.variants ?? [];
+  return products.map((p: any, i: number) => ({
+    ...p,
+    variants: variants[i] || [],
+  }));
+}
+
 function transformProduct(p: any) {
   const variants = (p.variants || []).map((v: any) => ({
     id: v.id,
@@ -135,8 +145,7 @@ function transformProduct(p: any) {
 
 export async function getProducts() {
   const data = await request<any>("/products");
-  const list = Array.isArray(data) ? data : data.products ?? [];
-  return list.map(transformProduct);
+  return extractProductList(data).map(transformProduct);
 }
 
 export async function createProduct(productData: {
@@ -235,7 +244,7 @@ export async function createMovement(data: {
 // --- Dashboard ---
 export async function getDashboard(existingProducts?: any[]): Promise<DashboardMetrics> {
   const rawProducts = existingProducts ?? await request<any>("/products");
-  const list = Array.isArray(rawProducts) ? rawProducts : rawProducts.products ?? [];
+  const list = existingProducts ? rawProducts : extractProductList(rawProducts);
   const movements = await request<any[]>("/movements");
 
   const typedProducts = list.map(transformProduct);
