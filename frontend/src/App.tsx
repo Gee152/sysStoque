@@ -69,31 +69,14 @@ export default function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // iOS: force viewport to zoom back out when input loses focus
+  // iOS: force reflow when keyboard dismisses to reset viewport zoom
   useEffect(() => {
-    const handler = (e: FocusEvent) => {
-      const el = e.target as HTMLElement | null
-      if (!el?.matches?.("input, select, textarea")) return
-      // Skip date/time inputs — native picker interferes with the trick
-      if (el instanceof HTMLInputElement && (el.type === "date" || el.type === "datetime-local" || el.type === "time")) return
-      // Don't run if focus is moving to another input (tab / tap between fields)
-      const nextTarget = e.relatedTarget as HTMLElement | null
-      if (nextTarget?.matches?.("input, select, textarea")) return
-      setTimeout(() => {
-        const tmp = document.createElement("input")
-        tmp.style.position = "fixed"
-        tmp.style.opacity = "0"
-        tmp.style.pointerEvents = "none"
-        tmp.style.height = "0"
-        document.body.appendChild(tmp)
-        tmp.focus()
-        tmp.blur()
-        document.body.removeChild(tmp)
-        window.scrollTo(0, window.scrollY)
-      }, 300)
+    const handler = () => {
+      // Only fires after a short delay so iOS has time to dismiss keyboard
+      setTimeout(() => window.scrollTo(0, window.scrollY), 400)
     }
-    document.addEventListener("focusout", handler, true)
-    return () => document.removeEventListener("focusout", handler, true)
+    window.addEventListener("resize", handler)
+    return () => window.removeEventListener("resize", handler)
   }, [])
 
   // Detect public share route
