@@ -69,6 +69,19 @@ export default function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // iOS: reset zoom when input loses focus
+  useEffect(() => {
+    const handler = (e: FocusEvent) => {
+      const el = e.target as HTMLElement | null
+      if (el?.matches?.("input, select, textarea")) {
+        const y = window.scrollY
+        setTimeout(() => window.scrollTo(0, y), 200)
+      }
+    }
+    document.addEventListener("blur", handler, true)
+    return () => document.removeEventListener("blur", handler, true)
+  }, [])
+
   // Detect public share route
   const [isShareRoute, setShareRoute] = useState(false);
   const [shareProductId, setShareProductId] = useState<string | null>(null);
