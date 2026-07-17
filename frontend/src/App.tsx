@@ -29,8 +29,8 @@ import SharedProductView from "./components/SharedProductView";
 import KanbanView from "./components/KanbanView";
 import PwaInstallBanner from "./components/PwaInstallBanner";
 import { NotificationProvider } from "./components/Notification";
-import Onboarding, { isOnboardingDone } from "./components/Onboarding";
-import { getProducts, getDashboard, createProduct, updateProduct, deleteProduct, createMovement, setOnUnauthorized, listClientFlows, createClientFlow, updateClientFlowStatus } from "./services/api";
+import Onboarding from "./components/Onboarding";
+import { getProducts, getDashboard, createProduct, updateProduct, deleteProduct, createMovement, setOnUnauthorized, listClientFlows, createClientFlow, updateClientFlowStatus, markOnboardingDone } from "./services/api";
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("stockflow_token"));
@@ -100,15 +100,15 @@ export default function App() {
 
   // Auto load data on auth success
   useEffect(() => {
-    if (token) {
+    if (token && currentUser) {
       loadAllData();
-      if (!isOnboardingDone()) {
+      if (!currentUser.onboardingDone) {
         setShowOnboarding(true);
       }
     }
-  }, [token]);
+  }, [token, currentUser]);
 
-  const handleAuthSuccess = (newToken: string, user: { id: string; name: string; email: string }) => {
+  const handleAuthSuccess = (newToken: string, user: { id: string; name: string; email: string; onboardingDone: boolean }) => {
     localStorage.setItem("stockflow_token", newToken);
     localStorage.setItem("stockflow_user", JSON.stringify(user));
     setToken(newToken);
@@ -494,7 +494,17 @@ export default function App() {
       )}
       <PwaInstallBanner />
       {showOnboarding && (
-        <Onboarding onComplete={() => setShowOnboarding(false)} activeTab={activeTab} onNavigateTab={(tab) => setActiveTab(tab as any)} />
+        <Onboarding
+          onComplete={async () => {
+            try {
+              await markOnboardingDone();
+              setCurrentUser(prev => prev ? { ...prev, onboardingDone: true } : prev);
+            } catch {}
+            setShowOnboarding(false);
+          }}
+          activeTab={activeTab}
+          onNavigateTab={(tab) => setActiveTab(tab as any)}
+        />
       )}
       </NotificationProvider>
     </div>

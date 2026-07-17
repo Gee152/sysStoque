@@ -2,9 +2,9 @@ import { UserAssociation } from "../../domain/association/association.js"
 import { toUserDomain } from "./transforme/user.transformer.js"
 import { AppDataSource } from "./data-source.js"
 import { UserEntity } from "./entities/UserEntity.js"
-import type { CreateUserRepository, GetLoginUserRepository, FindUserByIdRepository } from "../../domain/repository/user.js"
+import type { CreateUserRepository, GetLoginUserRepository, FindUserByIdRepository, UpdateUserOnboardingRepository } from "../../domain/repository/user.js"
 
-export class UserRepositoryImpl implements CreateUserRepository, GetLoginUserRepository, FindUserByIdRepository {
+export class UserRepositoryImpl implements CreateUserRepository, GetLoginUserRepository, FindUserByIdRepository, UpdateUserOnboardingRepository {
   async createUser(data: { userID: string; name: string; email: string; passwordHash: string; phone?: string | null; createdAt: Date }): Promise<UserAssociation> {
     const repository = AppDataSource.getRepository(UserEntity)
     const user = repository.create({
@@ -39,6 +39,11 @@ export class UserRepositoryImpl implements CreateUserRepository, GetLoginUserRep
     user.passwordHash = data.passwordHash
     if (data.phone !== undefined) user.phone = data.phone
     await repository.save(user)
+  }
+
+  async markOnboardingDone(userID: string): Promise<void> {
+    const repository = AppDataSource.getRepository(UserEntity)
+    await repository.update({ userID }, { onboardingDone: true })
   }
 
   async deleteUserRepository(userID: string): Promise<void> {

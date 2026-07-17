@@ -4,6 +4,7 @@ export class UserAssociation {
   public passwordHash: string
   public name: string
   public phone: string | null
+  public onboardingDone: boolean
   public createdAt: Date
   public updatedAt: Date
 
@@ -13,6 +14,7 @@ export class UserAssociation {
     passwordHash: string,
     name: string,
     phone: string | null,
+    onboardingDone: boolean,
     createdAt: Date,
     updatedAt: Date
   ) {
@@ -21,6 +23,7 @@ export class UserAssociation {
     this.passwordHash = passwordHash
     this.name = name
     this.phone = phone
+    this.onboardingDone = onboardingDone
     this.createdAt = createdAt
     this.updatedAt = updatedAt
   }

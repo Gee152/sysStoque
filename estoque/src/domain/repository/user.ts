@@ -18,3 +18,7 @@ export interface GetLoginUserRepository {
 export interface FindUserByIdRepository {
   findById(userID: string): Promise<UserAssociation | null>
 }
+
+export interface UpdateUserOnboardingRepository {
+  markOnboardingDone(userID: string): Promise<void>
+}

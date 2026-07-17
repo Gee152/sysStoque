@@ -17,18 +17,22 @@ export class UserEntity {
   @Column('varchar', { name: 'phone', nullable: true })
   public phone!: string | null;
 
+  @Column('boolean', { name: 'onboarding_done', default: false })
+  public onboardingDone!: boolean;
+
   @CreateDateColumn({ name: "created_at" })
   public createdAt!: Date;
 
   @UpdateDateColumn({ name: "updated_at" })
   public updatedAt!: Date;
 
-  constructor(userID: string, email: string, passwordHash: string, name: string, phone: string | null, createdAt: Date) {
+  constructor(userID: string, email: string, passwordHash: string, name: string, phone: string | null, createdAt: Date, onboardingDone: boolean = false) {
     this.userID = userID
     this.email = email;
     this.passwordHash = passwordHash;
     this.name = name;
     this.phone = phone;
     this.createdAt = createdAt;
+    this.onboardingDone = onboardingDone;
   }
 }

@@ -1,6 +1,6 @@
 import { RegisterUser } from "../../domain/usecase/RegisterUser.js"
 import { AuthenticateUser } from "../../domain/usecase/AuthenticateUser.js"
-import type { CreateUserRepository, GetLoginUserRepository } from "../../domain/repository/user.js"
+import type { CreateUserRepository, GetLoginUserRepository, UpdateUserOnboardingRepository } from "../../domain/repository/user.js"
 import { CreateUserUseCaseRequest, GetLoginUserUseCaseRequest } from "../../domain/ucio/User.js"
 import { SuccessResponse } from "../response/response.js"
 import type { Request, Response } from "express"
@@ -9,9 +9,18 @@ export class AuthController {
   private readonly registerUseCase: RegisterUser
   private readonly loginUseCase: AuthenticateUser
 
-  constructor(createRepository: CreateUserRepository & GetLoginUserRepository, loginRepository: GetLoginUserRepository) {
+  constructor(
+    createRepository: CreateUserRepository & GetLoginUserRepository,
+    loginRepository: GetLoginUserRepository,
+    private onboardingRepository: UpdateUserOnboardingRepository
+  ) {
     this.registerUseCase = new RegisterUser(undefined, createRepository, createRepository)
     this.loginUseCase = new AuthenticateUser(undefined, loginRepository)
+  }
+
+  async markOnboardingDone(req: Request, res: Response): Promise<void> {
+    await this.onboardingRepository.markOnboardingDone(req.userId || "")
+    new SuccessResponse().success(res, null)
   }
 
   async register(req: Request, res: Response): Promise<void> {

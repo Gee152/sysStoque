@@ -49,7 +49,7 @@ async function requestBlob(url: string): Promise<Blob> {
 
 // --- Auth ---
 export async function login(email: string, password: string) {
-  return request<{ token: string; user: { id: string; name: string; email: string; phone?: string | null } }>(
+  return request<{ token: string; user: { id: string; name: string; email: string; phone?: string | null; onboardingDone: boolean } }>(
     "/auth/login",
     {
       method: "POST",
@@ -59,13 +59,20 @@ export async function login(email: string, password: string) {
 }
 
 export async function register(name: string, email: string, password: string, phone?: string) {
-  return request<{ token: string; user: { id: string; name: string; email: string; phone?: string | null } }>(
+  return request<{ token: string; user: { id: string; name: string; email: string; phone?: string | null; onboardingDone: boolean } }>(
     "/auth/register",
     {
       method: "POST",
       body: JSON.stringify({ name, email, passwordHash: password, phone: phone || undefined }),
     }
   );
+}
+
+export async function markOnboardingDone(): Promise<void> {
+  await request("/auth/onboarding", {
+    method: "PATCH",
+    body: JSON.stringify({}),
+  });
 }
 
 // --- Upload ---

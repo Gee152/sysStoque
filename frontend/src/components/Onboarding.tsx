@@ -45,16 +45,6 @@ const steps: Step[] = [
   { title: "Tudo pronto!", description: "Agora você conhece todos os recursos. Cadastre produtos, movimente o estoque e acompanhe seus leads no pipeline de vendas!" },
 ]
 
-const ONBOARDING_DONE_KEY = "stockflow_onboarding_done"
-
-export function isOnboardingDone(): boolean {
-  return localStorage.getItem(ONBOARDING_DONE_KEY) === "true"
-}
-
-export function markOnboardingDone(): void {
-  localStorage.setItem(ONBOARDING_DONE_KEY, "true")
-}
-
 interface OnboardingProps {
   onComplete: () => void
   activeTab: string
@@ -267,10 +257,7 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
   const finish = () => {
     closeModals()
     setExit(true)
-    setTimeout(() => {
-      markOnboardingDone()
-      onComplete()
-    }, 300)
+    setTimeout(() => onComplete(), 300)
   }
 
   const isLast = step === steps.length - 1

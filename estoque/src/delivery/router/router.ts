@@ -31,7 +31,7 @@ export function createRouter(): Router {
   const productRepo = new ProductRepositoryImpl()
   const movementRepo = new MovementRepositoryImpl()
 
-  const authController = new AuthController(userRepo, userRepo)
+  const authController = new AuthController(userRepo, userRepo, userRepo)
   const productController = new ProductController(productRepo, productRepo, productRepo, productRepo, productRepo, productRepo, productRepo, userRepo, movementRepo)
   const movementController = new MovementController(productRepo, movementRepo, movementRepo, movementRepo, productRepo)
   const uploadController = new UploadController()
@@ -44,6 +44,7 @@ export function createRouter(): Router {
 
   router.post("/auth/register", (req, res) => authController.register(req, res))
   router.post("/auth/login", (req, res) => authController.login(req, res))
+  router.patch("/auth/onboarding", authMiddleware, (req, res) => authController.markOnboardingDone(req, res))
 
   router.get("/products/:id/share", (req, res) => productController.share(req, res))
 

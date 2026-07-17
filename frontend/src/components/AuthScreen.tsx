@@ -9,7 +9,7 @@ import { Lock, Mail, User, ShieldCheck, ArrowRight, AlertCircle, Sparkles, SunMo
 import { login, register } from "../services/api";
 
 interface AuthScreenProps {
-  onAuthSuccess: (token: string, user: { id: string; name: string; email: string }) => void;
+  onAuthSuccess: (token: string, user: { id: string; name: string; email: string; onboardingDone: boolean }) => void;
   darkMode: boolean;
   onToggleDark: () => void;
 }
