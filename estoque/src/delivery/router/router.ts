@@ -36,7 +36,7 @@ export function createRouter(): Router {
   const movementController = new MovementController(productRepo, movementRepo, movementRepo, movementRepo, productRepo)
   const uploadController = new UploadController()
   const clientFlowRepo = new ClientFlowRepositoryImpl()
-  const clientFlowController = new ClientFlowController(clientFlowRepo, clientFlowRepo, clientFlowRepo, clientFlowRepo, clientFlowRepo)
+  const clientFlowController = new ClientFlowController(clientFlowRepo, clientFlowRepo, clientFlowRepo, clientFlowRepo, clientFlowRepo, clientFlowRepo)
 
   router.get("/health", (_req, res) => {
     res.status(200).json({ status: "OK", timestamp: new Date() })
@@ -61,6 +61,7 @@ export function createRouter(): Router {
 
   router.post("/client-flow", authMiddleware, (req, res) => clientFlowController.create(req, res))
   router.get("/client-flow", authMiddleware, (req, res) => clientFlowController.list(req, res))
+  router.get("/client-flow/find-by-contact/:contact", authMiddleware, (req, res) => clientFlowController.findByContact(req, res))
   router.patch("/client-flow/:id/status", authMiddleware, (req, res) => clientFlowController.updateStatus(req, res))
   router.put("/client-flow/track/:token", (req, res) => clientFlowController.track(req, res))
 

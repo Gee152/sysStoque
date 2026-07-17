@@ -14,7 +14,7 @@ const COLUMNS: { id: ClientFlowStatus; label: string; icon: any; color: string }
 interface KanbanViewProps {
   flows: ClientFlow[];
   products: Product[];
-  onCreateFlow: (data: { productId: string; clientName: string; clientContact: string; description?: string }) => Promise<void>;
+  onCreateFlow: (data: { productId: string; clientName: string; clientContact: string; description?: string }) => Promise<ClientFlow>;
   onUpdateStatus: (id: string, data: { currentStatus: ClientFlowStatus; description?: string; nextFollowUpAt?: string }) => Promise<void>;
 }
 
@@ -155,8 +155,8 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
       return;
     }
 
-    if (!/^\+[1-9]\d{1,14}$/.test(formContact)) {
-      setFormError("Contato deve estar no formato E.164 (+5511999999999).");
+    if (!/^\+[1-9]\d{1,11}$/.test(formContact)) {
+      setFormError("Contato deve estar no formato E.164 (119.9999-9999).");
       return;
     }
 
@@ -336,12 +336,12 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                   <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Contato (WhatsApp) *</label>
                   <input
                     required
-                    placeholder="+5511999999999"
+                    placeholder="11999999999"
                     value={formContact}
                     onChange={e => setFormContact(e.target.value)}
                     className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-600 font-mono"
                   />
-                  <p className="text-[9px] text-slate-400">Formato internacional: +5511999999999</p>
+                  <p className="text-[9px] text-slate-400">Formato internacional: 11999999999</p>
                 </div>
 
                 <div className="space-y-1">
@@ -365,7 +365,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                   ) : (
                     <>
                       <Check className="w-4 h-4" />
-                      <span>Gerar Link de Rastreamento</span>
+                      <span>Gerar Link de Venda</span>
                     </>
                   )}
                 </button>

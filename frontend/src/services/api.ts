@@ -340,6 +340,14 @@ export async function updateClientFlowStatus(id: string, data: {
   });
 }
 
+export async function findClientFlowByContact(contact: string): Promise<ClientFlow | null> {
+  try {
+    return await request<ClientFlow | null>(`/client-flow/find-by-contact/${encodeURIComponent(contact)}`);
+  } catch {
+    return null;
+  }
+}
+
 export async function trackClientFlow(token: string): Promise<void> {
   await fetch(`${API_BASE}/client-flow/track/${token}`, { method: "PUT" });
 }

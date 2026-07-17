@@ -202,12 +202,9 @@ export default function App() {
 
   // Client Flow handlers
   const handleCreateFlow = async (data: { productId: string; clientName: string; clientContact: string; description?: string }) => {
-    try {
-      const newFlow = await createClientFlow(data);
-      setClientFlows(prev => [newFlow, ...prev]);
-    } catch (err: any) {
-      throw new Error(err.message || "Erro ao criar lead.");
-    }
+    const newFlow = await createClientFlow(data);
+    setClientFlows(prev => [newFlow, ...prev]);
+    return newFlow;
   };
 
   const handleUpdateFlowStatus = async (id: string, data: { currentStatus: ClientFlowStatus; description?: string; nextFollowUpAt?: string }) => {
@@ -247,6 +244,7 @@ export default function App() {
             onUpdateProduct={handleUpdateProduct}
             onDeleteProduct={handleDeleteProduct}
             onRegisterQuickMovement={handleQuickMovement}
+            onCreateFlow={handleCreateFlow}
           />
         );
       case "movements":

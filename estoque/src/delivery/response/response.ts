@@ -41,7 +41,7 @@ class SuccessResponse {
     const KEYS = ["token", "user", "product", "variants", "movement", "products", "movements", "flow", "flows", "data", "deletedId"]
     const result: any = {}
     for (const key of KEYS) {
-      if (body[key]) result[key] = body[key]
+      if (body[key] !== undefined) result[key] = body[key]
     }
     if (Object.keys(result).length > 0) {
       const entries = Object.keys(result)

@@ -4,13 +4,13 @@ import {
   UpdateClientFlowStatusUseCaseRequest,
 } from "../ucio/ClientFlow.js"
 
-const E164_REGEX = /^\+[1-9]\d{1,14}$/
+const E164_REGEX = /^\d{10,13}$/
 
 class CreateClientFlowValidate {
   async validate(req: CreateClientFlowUseCaseRequest): Promise<string | null> {
     if (checkEmpty(req.clientName)) return "O nome do cliente é obrigatório."
     if (checkEmpty(req.clientContact)) return "O contato do cliente é obrigatório."
-    if (!E164_REGEX.test(req.clientContact)) return "O contato deve estar no formato E.164 (+5511999999999)."
+    if (!E164_REGEX.test(req.clientContact)) return "O contato deve estar no formato E.164 (11999999999)."
     if (checkEmpty(req.productId)) return "O ID do produto é obrigatório."
     if (!req.userId) return "Usuário não autenticado."
     return null

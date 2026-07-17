@@ -2,14 +2,15 @@ import { AppDataSource } from "./data-source.js"
 import { ClientFlowEntity } from "./entities/ClientFlowEntity.js"
 import { toClientFlowDomain } from "./transforme/clientFlow.transformer.js"
 import { ClientFlowAssociation } from "../../domain/association/association.js"
-import type { CreateClientFlowRepository, FindClientFlowByTokenRepository, FindClientFlowByIdRepository, UpdateClientFlowRepository, ListClientFlowsByUserIdRepository } from "../../domain/repository/clientFlow.js"
+import type { CreateClientFlowRepository, FindClientFlowByTokenRepository, FindClientFlowByIdRepository, UpdateClientFlowRepository, ListClientFlowsByUserIdRepository, FindClientFlowByContactRepository } from "../../domain/repository/clientFlow.js"
 
 export class ClientFlowRepositoryImpl implements
   CreateClientFlowRepository,
   FindClientFlowByTokenRepository,
   FindClientFlowByIdRepository,
   UpdateClientFlowRepository,
-  ListClientFlowsByUserIdRepository {
+  ListClientFlowsByUserIdRepository,
+  FindClientFlowByContactRepository {
 
   async createClientFlow(data: {
     trackingToken: string
@@ -68,5 +69,14 @@ export class ClientFlowRepositoryImpl implements
       order: { createdAt: "DESC" },
     })
     return entities.map(toClientFlowDomain)
+  }
+
+  async findByContact(contact: string, userId: string): Promise<ClientFlowAssociation | null> {
+    const repo = AppDataSource.getRepository(ClientFlowEntity)
+    const entity = await repo.findOne({
+      where: { clientContact: contact, userId },
+      order: { createdAt: "DESC" },
+    })
+    return entity ? toClientFlowDomain(entity) : null
   }
 }

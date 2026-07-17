@@ -24,11 +24,11 @@ import {
   Upload, 
   Share2, 
   Image as ImageIcon, 
-  Copy, 
   X 
 } from "lucide-react";
-import { Product, ProductVariant } from "../types";
+import { Product, ProductVariant, ClientFlow } from "../types";
 import { uploadImage } from "../services/api";
+import ShareLeadModal from "./ShareLeadModal";
 
 interface ProductsViewProps {
   products: Product[];
@@ -36,9 +36,10 @@ interface ProductsViewProps {
   onUpdateProduct: (productId: string, productData: any) => Promise<void>;
   onDeleteProduct: (productId: string) => Promise<void>;
   onRegisterQuickMovement: (variantId: string, type: "IN" | "OUT", quantity: number, reason: string) => Promise<void>;
+  onCreateFlow: (data: { productId: string; clientName: string; clientContact: string; description?: string }) => Promise<ClientFlow>;
 }
 
-export default function ProductsView({ products, onAddProduct, onUpdateProduct, onDeleteProduct, onRegisterQuickMovement }: ProductsViewProps) {
+export default function ProductsView({ products, onAddProduct, onUpdateProduct, onDeleteProduct, onRegisterQuickMovement, onCreateFlow }: ProductsViewProps) {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("TODAS");
   const [expandedProductId, setExpandedProductId] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
     { name: "Padrão", price: "", stock: "", image: null, imagePreview: "" }
   ]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [shareModalProduct, setShareModalProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -361,19 +363,12 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        const link = `${window.location.origin}/compartilhar/${product.id}`;
-                        navigator.clipboard.writeText(link);
-                        setCopiedId(product.id);
-                        setTimeout(() => setCopiedId(null), 2000);
+                        setShareModalProduct(product);
                       }}
                       className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-                      title="Copiar link de compartilhamento"
+                      title="Compartilhar com rastreamento"
                     >
-                      {copiedId === product.id ? (
-                        <Copy className="w-3.5 h-3.5 text-emerald-500" />
-                      ) : (
-                        <Share2 className="w-3.5 h-3.5" />
-                      )}
+                      <Share2 className="w-3.5 h-3.5" />
                     </button>
 
                     {/* Stock status indicator */}
@@ -881,6 +876,13 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ShareLeadModal
+        open={!!shareModalProduct}
+        product={shareModalProduct}
+        onClose={() => setShareModalProduct(null)}
+        onCreateFlow={onCreateFlow}
+      />
     </div>
   );
 }

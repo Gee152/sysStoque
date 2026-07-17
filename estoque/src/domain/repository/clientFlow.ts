@@ -31,3 +31,7 @@ export interface UpdateClientFlowRepository {
 export interface ListClientFlowsByUserIdRepository {
   findByUserId(userId: string): Promise<ClientFlowAssociation[]>
 }
+
+export interface FindClientFlowByContactRepository {
+  findByContact(contact: string, userId: string): Promise<ClientFlowAssociation | null>
+}
