@@ -651,6 +651,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
 
                         <div className="col-span-2 space-y-1">
                           <input
+                            id={idx === 0 ? "form-variant-name" : undefined}
                             type="text"
                             required
                             placeholder="Especificação (ex: Azul / M, 110V)"
@@ -679,7 +680,9 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
                                 </button>
                               </div>
                             ) : null}
-                            <label className="flex-1 flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[10px] text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 cursor-pointer transition-colors font-medium">
+                            <label
+                              id={idx === 0 ? "form-variant-image" : undefined}
+                              className="flex-1 flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[10px] text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-300 cursor-pointer transition-colors font-medium">
                               <Upload className="w-3 h-3" />
                               {v.imagePreview ? "Trocar imagem" : "Adicionar imagem"}
                               <input
@@ -697,6 +700,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
 
                         <div className="grid grid-cols-2 gap-1">
                           <input
+                            id={idx === 0 ? "form-variant-price" : undefined}
                             type="number"
                             step="0.01"
                             required
@@ -706,6 +710,7 @@ export default function ProductsView({ products, onAddProduct, onUpdateProduct, 
                             className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1.5 py-1.5 text-[11px] text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-600"
                           />
                           <input
+                            id={idx === 0 ? "form-variant-stock" : undefined}
                             type="number"
                             required
                             placeholder="Estoque"

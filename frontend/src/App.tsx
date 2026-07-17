@@ -27,6 +27,7 @@ import MovementsView from "./components/MovementsView";
 import SharedProductView from "./components/SharedProductView";
 import PwaInstallBanner from "./components/PwaInstallBanner";
 import { NotificationProvider } from "./components/Notification";
+import Onboarding, { isOnboardingDone } from "./components/Onboarding";
 import { getProducts, getDashboard, createProduct, updateProduct, deleteProduct, createMovement, setOnUnauthorized } from "./services/api";
 
 export default function App() {
@@ -54,6 +55,16 @@ export default function App() {
 
   const [loading, setLoading] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 1024 : false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Detect public share route
   const [isShareRoute, setShareRoute] = useState(false);
@@ -74,6 +85,9 @@ export default function App() {
   useEffect(() => {
     if (token) {
       loadAllData();
+      if (!isOnboardingDone()) {
+        setShowOnboarding(true);
+      }
     }
   }, [token]);
 
@@ -362,6 +376,7 @@ export default function App() {
                 </button>
               ))}
               <button
+                id="btn-toggle-dark-desktop"
                 onClick={() => setDarkMode(!darkMode)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200 transition-all cursor-pointer"
               >
@@ -386,11 +401,13 @@ export default function App() {
           </aside>
 
           {/* Mobile layout (lg:hidden) */}
-          <div className="lg:hidden mobile-frame w-full h-dynamic bg-slate-50 dark:bg-slate-950 overflow-y-auto shadow-lg transition-colors">
-            <div className="px-4 pt-5 pb-24">
-              {content}
+          {isMobile && (
+            <div className="lg:hidden mobile-frame w-full h-dynamic bg-slate-50 dark:bg-slate-950 overflow-y-auto shadow-lg transition-colors">
+              <div className="px-4 pt-5 pb-24">
+                {content}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Mobile bottom nav (fixed) */}
           <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 py-1.5 px-2 flex justify-between items-center shadow-xs pb-safe">
@@ -408,6 +425,7 @@ export default function App() {
               </button>
             ))}
             <button
+              id="btn-toggle-dark"
               onClick={() => setDarkMode(!darkMode)}
               className="flex flex-col items-center justify-center gap-0.5 transition-colors cursor-pointer select-none min-w-[56px] min-h-[44px] rounded-lg px-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
             >
@@ -417,14 +435,19 @@ export default function App() {
           </div>
 
           {/* Desktop layout (hidden < lg) */}
-          <main className="hidden lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
-            <div className="flex-1 overflow-y-auto p-6">
-              {content}
-            </div>
-          </main>
+          {!isMobile && (
+            <main className="hidden lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
+              <div className="flex-1 overflow-y-auto p-6">
+                {content}
+              </div>
+            </main>
+          )}
         </div>
       )}
       <PwaInstallBanner />
+      {showOnboarding && (
+        <Onboarding onComplete={() => setShowOnboarding(false)} activeTab={activeTab} onNavigateTab={(tab) => setActiveTab(tab as any)} />
+      )}
       </NotificationProvider>
     </div>
   );
