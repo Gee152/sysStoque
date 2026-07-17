@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, ChevronLeft, ChevronRight, ShieldCheck, Package, MousePointerClick } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ShieldCheck, Package, MousePointerClick, TrendingUp } from "lucide-react";
 
 interface Step {
   title: string;
@@ -31,9 +31,18 @@ const steps: Step[] = [
   { targetId: "form-mov-qty", title: "Quantidade", description: "Informe quantas unidades foram movimentadas.", tab: "movements" },
   { targetId: "form-mov-reason", title: "Motivo", description: "Descreva o motivo da movimentação. Há sugestões rápidas abaixo.", tab: "movements" },
   { targetId: "form-mov-btn-submit", title: "Registrar", description: "Confirme os dados e registre a movimentação. O saldo será atualizado.", tab: "movements" },
+  { targetId: "nav-tab-vendas", title: "Vendas (Kanban)", description: "Gerencie seus leads em um pipeline visual de vendas. Arraste os cards entre as colunas.", tab: "vendas" },
+  { title: "Pipeline de Vendas", description: "Cada coluna representa um estágio: Enviado, Negociando, Notas e Fechado. Você move os cards conforme o lead avança." },
+  { targetId: "vendas-btn-open-add-modal", title: "Novo Lead", description: "Clique no (+) para registrar um novo lead no pipeline.", tab: "vendas" },
+  { targetId: "form-vendas-product", title: "Selecionar Produto", description: "Escolha o produto que o lead está interessado.", tab: "vendas" },
+  { targetId: "form-vendas-name", title: "Nome do Cliente", description: "Informe o nome do contato para acompanhamento.", tab: "vendas" },
+  { targetId: "form-vendas-contact", title: "WhatsApp do Cliente", description: "Número para contato. Um link de rastreamento será gerado automaticamente.", tab: "vendas" },
+  { targetId: "form-vendas-desc", title: "Observação", description: "Contexto adicional sobre o lead ou a venda.", tab: "vendas" },
+  { targetId: "form-vendas-btn-submit", title: "Gerar Link de Venda", description: "Confirme para criar o lead e gerar o link de rastreamento compartilhável.", tab: "vendas" },
+  { title: "Cards do Pipeline", description: "Cada lead tem um card com nome, produto e contato. Use o lápis para editar observações. Arraste entre as colunas e adicione informações ao mover." },
   { targetId: "nav-tab-dashboard", title: "Resumo (Dashboard)", description: "Acompanhe KPIs: total de produtos, valor em estoque, estoque crítico e classificação ABC.", tab: "dashboard" },
   { targetId: "btn-toggle-dark", title: "Modo Escuro", description: "Alterne entre tema claro e escuro. Sua preferência fica salva.", tab: "dashboard" },
-  { title: "Tudo pronto!", description: "Agora você conhece os principais recursos. Comece cadastrando seus produtos e gerenciando seu estoque!" },
+  { title: "Tudo pronto!", description: "Agora você conhece todos os recursos. Cadastre produtos, movimente o estoque e acompanhe seus leads no pipeline de vendas!" },
 ]
 
 const ONBOARDING_DONE_KEY = "stockflow_onboarding_done"
@@ -120,8 +129,9 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
   const current = steps[step]
 
   const isProductForm = step >= 3 && step <= 10
-  const isMovementForm = step >= 12 && step <= 18
-  const isFormField = isProductForm || isMovementForm
+  const isMovementForm = step >= 13 && step <= 18
+  const isVendasForm = step >= 22 && step <= 26
+  const isFormField = isProductForm || isMovementForm || isVendasForm
 
   // Navigate to required tab
   useEffect(() => {
@@ -135,17 +145,20 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
     const t1 = setTimeout(() => {
       if (exit) return
 
-      const needsModal = isProductForm || isMovementForm
+      const needsModal = isProductForm || isMovementForm || isVendasForm
       if (needsModal) {
-        // Only open if the modal is not already rendered (avoid toggling it closed)
         const productModalOpen = !!document.getElementById("form-product-name")
         const movementModalOpen = !!document.getElementById("form-mov-product")
+        const vendasModalOpen = !!document.getElementById("form-vendas-product")
 
         if (isProductForm && !productModalOpen) {
           document.getElementById("prod-btn-open-add-modal")?.click()
         }
         if (isMovementForm && !movementModalOpen) {
           document.getElementById("mov-btn-open-add-modal")?.click()
+        }
+        if (isVendasForm && !vendasModalOpen) {
+          document.getElementById("vendas-btn-open-add-modal")?.click()
         }
         requestAnimationFrame(() => {
           if (!exit) setPhase("act")
@@ -205,7 +218,7 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
   const rect = useElementRect(phase === "ready" ? current.targetId : undefined)
 
   const closeModals = () => {
-    ["prod-btn-close-modal", "mov-btn-close-modal"].forEach(id => {
+    ["prod-btn-close-modal", "mov-btn-close-modal", "vendas-btn-close-modal"].forEach(id => {
       document.getElementById(id)?.click()
     })
   }
@@ -213,14 +226,19 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
   const goTo = (next: number) => {
     const prevProductForm = step >= 3 && step <= 10
     const nextProductForm = next >= 3 && next <= 10
-    const prevMovementForm = step >= 12 && step <= 18
-    const nextMovementForm = next >= 12 && next <= 18
+    const prevMovementForm = step >= 13 && step <= 18
+    const nextMovementForm = next >= 13 && next <= 18
+    const prevVendasForm = step >= 22 && step <= 26
+    const nextVendasForm = next >= 22 && next <= 26
 
     if (prevProductForm && !nextProductForm) {
       document.getElementById("prod-btn-close-modal")?.click()
     }
     if (prevMovementForm && !nextMovementForm) {
       document.getElementById("mov-btn-close-modal")?.click()
+    }
+    if (prevVendasForm && !nextVendasForm) {
+      document.getElementById("vendas-btn-close-modal")?.click()
     }
 
     setStep(next)
@@ -251,7 +269,7 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
   const isFirst = step === 0
   const hasTarget = !!current.targetId
   const phaseReady = phase === "ready"
-  const isInfo = step === 0 || step === steps.length - 1
+  const isInfo = step === 0 || step === 20 || step === 27 || step === steps.length - 1
 
   const gap = 6
 
@@ -342,6 +360,10 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
                     <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mb-4 border border-indigo-100 dark:border-indigo-800">
                       {step === 0 ? (
                         <ShieldCheck className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+                      ) : step === 20 ? (
+                        <TrendingUp className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+                      ) : step === 27 ? (
+                        <MousePointerClick className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
                       ) : (
                         <Package className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
                       )}

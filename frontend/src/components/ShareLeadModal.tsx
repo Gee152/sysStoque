@@ -101,7 +101,16 @@ export default function ShareLeadModal({ open, product, onClose, onCreateFlow }:
 
       const link = `${window.location.origin}/compartilhar/${product.id}?track=${flow.trackingToken}`;
       setTrackingLink(link);
-      await navigator.clipboard.writeText(link);
+
+      const ta = document.createElement("textarea");
+      ta.value = link;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+
       setCopied(true);
       setDone(true);
       notify.success("Link de rastreamento copiado!");

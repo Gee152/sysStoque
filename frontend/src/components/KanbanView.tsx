@@ -251,6 +251,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
           <p className="text-[11px] text-slate-500 dark:text-slate-400">Rastreamento de leads em tempo real</p>
         </div>
         <button
+          id="vendas-btn-open-add-modal"
           onClick={() => setShowCreateModal(true)}
           className="py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs transition-all flex items-center gap-1 shadow-xs active:scale-95"
         >
@@ -372,7 +373,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
               <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-1.5 mb-1.5" />
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">Novo Lead</h3>
-                <button onClick={() => setShowCreateModal(false)} className="text-xs text-slate-400 dark:text-slate-500 font-semibold hover:text-slate-600 dark:hover:text-slate-300">
+                <button id="vendas-btn-close-modal" onClick={() => setShowCreateModal(false)} className="text-xs text-slate-400 dark:text-slate-500 font-semibold hover:text-slate-600 dark:hover:text-slate-300">
                   Cancelar
                 </button>
               </div>
@@ -388,6 +389,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Produto *</label>
                   <select
+                    id="form-vendas-product"
                     required
                     value={formProduct}
                     onChange={e => setFormProduct(e.target.value)}
@@ -403,6 +405,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Nome do Cliente *</label>
                   <input
+                    id="form-vendas-name"
                     required
                     placeholder="Ex: João Silva"
                     value={formName}
@@ -414,6 +417,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Contato (WhatsApp) *</label>
                   <input
+                    id="form-vendas-contact"
                     required
                     placeholder="11999999999"
                     value={formContact}
@@ -426,6 +430,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Observação</label>
                   <textarea
+                    id="form-vendas-desc"
                     placeholder="Contexto da venda..."
                     rows={2}
                     value={formDesc}
@@ -435,6 +440,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                 </div>
 
                 <button
+                  id="form-vendas-btn-submit"
                   type="submit"
                   disabled={formLoading}
                   className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-semibold rounded-lg text-xs transition-all flex items-center justify-center gap-1 shadow-md disabled:opacity-50"
