@@ -44,7 +44,8 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
   const [formError, setFormError] = useState<string | null>(null);
 
   const draggedItem = useRef<{ id: string; status: ClientFlowStatus } | null>(null);
-  const touchDrag = useRef<{ id: string; status: ClientFlowStatus; startY: number } | null>(null);
+  const touchDrag = useRef<{ id: string; status: ClientFlowStatus; startX: number; startY: number; dragging: boolean } | null>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flowsArray = Array.isArray(localFlows) ? localFlows : [];
   const grouped = flowsArray.reduce((acc, f) => {
@@ -74,23 +75,49 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
     draggedItem.current = { id: flow.id, status: flow.currentStatus as ClientFlowStatus };
   };
 
-  const handleTouchStart = (flow: ClientFlow) => {
-    touchDrag.current = { id: flow.id, status: flow.currentStatus as ClientFlowStatus, startY: 0 };
+  const handleTouchStart = (flow: ClientFlow, e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchDrag.current = { id: flow.id, status: flow.currentStatus as ClientFlowStatus, startX: touch.clientX, startY: touch.clientY, dragging: false };
+
+    longPressTimer.current = setTimeout(() => {
+      if (touchDrag.current) {
+        touchDrag.current.dragging = true;
+        if (navigator.vibrate) navigator.vibrate(10);
+      }
+    }, 400);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!touchDrag.current) return;
+
+    const dx = Math.abs(e.touches[0].clientX - touchDrag.current.startX);
     const dy = Math.abs(e.touches[0].clientY - touchDrag.current.startY);
-    const dx = Math.abs(e.touches[0].clientX - (touchDrag.current as any).startX || 0);
-    if (dy > 10 || dx > 10) {
+
+    if (!touchDrag.current.dragging && (dx > 10 || dy > 10)) {
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+      touchDrag.current = null;
+      return;
+    }
+
+    if (touchDrag.current.dragging) {
       e.preventDefault();
     }
-    (touchDrag.current as any).startX = e.touches[0].clientX;
-    touchDrag.current.startY = e.touches[0].clientY;
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchDrag.current) return;
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
+    if (!touchDrag.current || !touchDrag.current.dragging) {
+      touchDrag.current = null;
+      return;
+    }
+
     const target = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
     const columnEl = target?.closest("[data-column-status]") as HTMLElement | null;
     const targetStatus = columnEl?.dataset.columnStatus as ClientFlowStatus | undefined;
@@ -302,7 +329,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                       animate={{ opacity: 1, y: 0 }}
                       draggable
                       onDragStart={() => handleDragStart(flow)}
-                      onTouchStart={() => handleTouchStart(flow)}
+                      onTouchStart={(e) => handleTouchStart(flow, e)}
                       onTouchMove={handleTouchMove}
                       onTouchEnd={handleTouchEnd}
                       className="p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-3xs hover:shadow-xs transition-shadow cursor-grab active:cursor-grabbing space-y-2"
