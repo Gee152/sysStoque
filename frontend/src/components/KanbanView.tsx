@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Phone, Package, Calendar, X, Check, ChevronRight, Clock, AlertCircle, MessageCircle, Send, ListTodo, TrendingUp, XCircle, Pencil } from "lucide-react";
+import { Plus, Phone, Package, Calendar, X, Check, ChevronRight, Clock, AlertCircle, MessageCircle, Send, ListTodo, TrendingUp, XCircle, Pencil, ArrowRight } from "lucide-react";
 import type { ClientFlow, ClientFlowStatus, Product } from "../types";
 import { useNotification } from "./Notification";
 
@@ -44,8 +44,6 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
   const [formError, setFormError] = useState<string | null>(null);
 
   const draggedItem = useRef<{ id: string; status: ClientFlowStatus } | null>(null);
-  const touchDrag = useRef<{ id: string; status: ClientFlowStatus; startX: number; startY: number; dragging: boolean } | null>(null);
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const flowsArray = Array.isArray(localFlows) ? localFlows : [];
   const grouped = flowsArray.reduce((acc, f) => {
@@ -75,59 +73,20 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
     draggedItem.current = { id: flow.id, status: flow.currentStatus as ClientFlowStatus };
   };
 
-  const handleTouchStart = (flow: ClientFlow, e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    touchDrag.current = { id: flow.id, status: flow.currentStatus as ClientFlowStatus, startX: touch.clientX, startY: touch.clientY, dragging: false };
-
-    longPressTimer.current = setTimeout(() => {
-      if (touchDrag.current) {
-        touchDrag.current.dragging = true;
-        if (navigator.vibrate) navigator.vibrate(10);
-      }
-    }, 400);
+  const nextStatus = (current: ClientFlowStatus): ClientFlowStatus | null => {
+    const order: ClientFlowStatus[] = ["ENVIADO", "NEGOCIANDO", "NOTAS", "FECHADO"];
+    const idx = order.indexOf(current);
+    if (idx === -1 || idx >= order.length - 1) return null;
+    return order[idx + 1];
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchDrag.current) return;
-
-    const dx = Math.abs(e.touches[0].clientX - touchDrag.current.startX);
-    const dy = Math.abs(e.touches[0].clientY - touchDrag.current.startY);
-
-    if (!touchDrag.current.dragging && (dx > 10 || dy > 10)) {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-      }
-      touchDrag.current = null;
-      return;
-    }
-
-    if (touchDrag.current.dragging) {
-      e.preventDefault();
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-
-    if (!touchDrag.current || !touchDrag.current.dragging) {
-      touchDrag.current = null;
-      return;
-    }
-
-    const target = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-    const columnEl = target?.closest("[data-column-status]") as HTMLElement | null;
-    const targetStatus = columnEl?.dataset.columnStatus as ClientFlowStatus | undefined;
-
-    if (targetStatus && targetStatus !== touchDrag.current.status) {
-      draggedItem.current = { id: touchDrag.current.id, status: touchDrag.current.status };
-      handleDrop(targetStatus);
-    }
-
-    touchDrag.current = null;
+  const handleAdvance = (flow: ClientFlow) => {
+    const target = nextStatus(flow.currentStatus as ClientFlowStatus);
+    if (!target) return;
+    setMoveModal({ flow, targetStatus: target });
+    setModalDescription(flow.description || "");
+    setModalFollowUp("");
+    setModalError(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -329,9 +288,6 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                       animate={{ opacity: 1, y: 0 }}
                       draggable
                       onDragStart={() => handleDragStart(flow)}
-                      onTouchStart={(e) => handleTouchStart(flow, e)}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
                       className="p-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-3xs hover:shadow-xs transition-shadow cursor-grab active:cursor-grabbing space-y-2"
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -370,6 +326,16 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
 
                       {flow.description && (
                         <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{flow.description}</p>
+                      )}
+
+                      {nextStatus(flow.currentStatus as ClientFlowStatus) && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleAdvance(flow); }}
+                          className="w-full mt-1 py-1.5 flex items-center justify-center gap-1 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-800 transition-colors active:scale-[0.98]"
+                        >
+                          <span className="text-[9px] font-semibold">Avançar</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
                       )}
                     </motion.div>
                   );
