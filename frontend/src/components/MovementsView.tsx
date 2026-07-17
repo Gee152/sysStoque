@@ -274,7 +274,7 @@ export default function MovementsView({ movements, products, onAddMovement }: Mo
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="relative w-full max-w-sm bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto z-10 space-y-3.5 shadow-xl"
+              className="relative w-full max-w-sm bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 rounded-t-2xl p-5 max-h-[85dvh] overflow-y-auto z-10 space-y-3.5 shadow-xl"
             >
               <div className="w-10 h-1 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto -mt-1.5 mb-1.5" />
 
