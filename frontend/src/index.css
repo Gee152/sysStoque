@@ -9,9 +9,13 @@
 }
 
 @layer base {
+  html {
+    overscroll-behavior: none;
+  }
   body {
     @apply font-sans bg-slate-50 text-slate-900 antialiased selection:bg-indigo-600 selection:text-white overflow-x-hidden;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    overscroll-behavior: none;
   }
 
   .dark body {

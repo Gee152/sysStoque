@@ -128,6 +128,14 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
   const [phase, setPhase] = useState<"navigate" | "act" | "ready">("navigate")
   const current = steps[step]
 
+  // Lock body scroll while tutorial is active
+  useEffect(() => {
+    if (exit) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => { document.body.style.overflow = prev }
+  }, [exit])
+
   const isProductForm = step >= 3 && step <= 10
   const isMovementForm = step >= 13 && step <= 18
   const isVendasForm = step >= 22 && step <= 26
