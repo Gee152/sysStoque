@@ -16,25 +16,25 @@ export class DeleteProduct {
       const error = await this.validate.deleteProductValidate(req)
       if (error) {
         console.log(TAG_PRE_CONDITION_ERROR, error)
-        return new DeleteProductUseCaseResponse(new PreconditionError(error))
+        return new DeleteProductUseCaseResponse(null, new PreconditionError(error))
       }
 
       const existing = await this.findRepository.findById(req.productId)
       if (!existing) {
-        return new DeleteProductUseCaseResponse(new PreconditionError("Produto não encontrado."))
+        return new DeleteProductUseCaseResponse(null, new PreconditionError("Produto não encontrado."))
       }
 
       if (existing.product.userId !== req.userId) {
-        return new DeleteProductUseCaseResponse(new PreconditionError("Você não tem permissão para deletar este produto."))
+        return new DeleteProductUseCaseResponse(null, new PreconditionError("Você não tem permissão para deletar este produto."))
       }
 
       await this.deleteVariantsRepository.deleteVariantsByProductId(req.productId)
       await this.deleteRepository.delete(req.productId)
 
-      return new DeleteProductUseCaseResponse(null)
+      return new DeleteProductUseCaseResponse(req.productId, null)
     } catch (error: any) {
       console.log(TAG_INTERNAL_SERVER_ERROR, error)
-      return new DeleteProductUseCaseResponse(new InternalServerError(error.message))
+      return new DeleteProductUseCaseResponse(null, new InternalServerError(error.message))
     }
   }
 }

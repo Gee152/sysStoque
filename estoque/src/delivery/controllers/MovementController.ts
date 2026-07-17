@@ -1,7 +1,7 @@
 import { RegisterMovement } from "../../domain/usecase/RegisterMovement.js"
 import { ListMovements } from "../../domain/usecase/ListMovements.js"
 import { GetDashboardData } from "../../domain/usecase/GetDashboardData.js"
-import type { FindVariantByIdRepository } from "../../domain/repository/product.js"
+import type { FindVariantByIdRepository, UpdateVariantStockRepository } from "../../domain/repository/product.js"
 import type { CreateMovementRepository, FindMovementsByUserIdRepository, GetDashboardDataRepository } from "../../domain/repository/movement.js"
 import { RegisterMovementUseCaseRequest, ListMovementsUseCaseRequest, GetDashboardDataUseCaseRequest, MOVEMENT_TYPES } from "../../domain/ucio/Movement.js"
 import { SuccessResponse } from "../response/response.js"
@@ -17,8 +17,9 @@ export class MovementController {
     movementRepo: CreateMovementRepository,
     listRepo: FindMovementsByUserIdRepository,
     dashboardRepo: GetDashboardDataRepository,
+    stockRepo: UpdateVariantStockRepository,
   ) {
-    this.registerUseCase = new RegisterMovement(undefined, variantRepo, movementRepo)
+    this.registerUseCase = new RegisterMovement(undefined, variantRepo, movementRepo, stockRepo)
     this.listUseCase = new ListMovements(undefined, listRepo)
     this.dashboardUseCase = new GetDashboardData(undefined, dashboardRepo)
   }

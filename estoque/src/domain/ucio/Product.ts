@@ -2,6 +2,13 @@ import { ProductAssociation } from "../association/association.js"
 import { ErrorEntity } from "../association/error.js"
 import { ProductVariantAssociation } from "../association/association.js"
 
+export interface VariantInput {
+  size: string
+  color: string
+  stock: number
+  imageUrl?: string
+}
+
 class CreateProductUseCaseRequest {
   public userId: string
   public name: string
@@ -9,14 +16,16 @@ class CreateProductUseCaseRequest {
   public costPrice: number
   public salePrice: number
   public imageUrl?: string
+  public variants: VariantInput[]
 
-  constructor(userId: string, name: string, costPrice: number, salePrice: number, category?: string, imageUrl?: string) {
+  constructor(userId: string, name: string, costPrice: number, salePrice: number, category?: string, imageUrl?: string, variants: VariantInput[] = []) {
     this.userId = userId
     this.name = name
     this.costPrice = costPrice
     this.salePrice = salePrice
     this.category = category
     this.imageUrl = imageUrl
+    this.variants = variants
   }
 }
 
@@ -60,8 +69,9 @@ class UpdateProductUseCaseRequest {
   public costPrice?: number
   public salePrice?: number
   public imageUrl?: string
+  public variants?: VariantInput[]
 
-  constructor(userId: string, productId: string, name?: string, category?: string, costPrice?: number, salePrice?: number, imageUrl?: string) {
+  constructor(userId: string, productId: string, name?: string, category?: string, costPrice?: number, salePrice?: number, imageUrl?: string, variants?: VariantInput[]) {
     this.userId = userId
     this.productId = productId
     this.name = name
@@ -69,13 +79,18 @@ class UpdateProductUseCaseRequest {
     this.costPrice = costPrice
     this.salePrice = salePrice
     this.imageUrl = imageUrl
+    this.variants = variants
   }
 }
 
 class UpdateProductUseCaseResponse {
+  public product: ProductAssociation | null
+  public variants: ProductVariantAssociation[]
   public error: ErrorEntity | null
 
-  constructor(error: ErrorEntity | null) {
+  constructor(product: ProductAssociation | null, variants: ProductVariantAssociation[], error: ErrorEntity | null) {
+    this.product = product
+    this.variants = variants
     this.error = error
   }
 }
@@ -91,9 +106,11 @@ class DeleteProductUseCaseRequest {
 }
 
 class DeleteProductUseCaseResponse {
+  public deletedId: string | null
   public error: ErrorEntity | null
 
-  constructor(error: ErrorEntity | null) {
+  constructor(deletedId: string | null, error: ErrorEntity | null) {
+    this.deletedId = deletedId
     this.error = error
   }
 }

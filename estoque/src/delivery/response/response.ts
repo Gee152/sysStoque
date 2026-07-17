@@ -38,7 +38,7 @@ class SuccessResponse {
 
   private extractData(body: any): any {
     if (!body) return null
-    const KEYS = ["token", "user", "product", "movement", "products", "movements", "data"]
+    const KEYS = ["token", "user", "product", "variants", "movement", "products", "movements", "data", "deletedId"]
     const result: any = {}
     for (const key of KEYS) {
       if (body[key]) result[key] = body[key]

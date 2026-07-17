@@ -31,7 +31,7 @@ export function createRouter(): Router {
 
   const authController = new AuthController(userRepo, userRepo)
   const productController = new ProductController(productRepo, productRepo, productRepo, productRepo, productRepo, productRepo, productRepo, userRepo)
-  const movementController = new MovementController(productRepo, movementRepo, movementRepo, movementRepo)
+  const movementController = new MovementController(productRepo, movementRepo, movementRepo, movementRepo, productRepo)
   const uploadController = new UploadController()
 
   router.get("/health", (_req, res) => {

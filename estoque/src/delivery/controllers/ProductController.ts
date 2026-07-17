@@ -28,14 +28,14 @@ export class ProductController {
   ) {
     this.createUseCase = new CreateProduct(undefined, createRepo, createVariantRepo)
     this.listUseCase = new ListProducts(undefined, listRepo)
-    this.updateUseCase = new UpdateProduct(undefined, findRepo, updateRepo)
+    this.updateUseCase = new UpdateProduct(undefined, findRepo, updateRepo, deleteVariantsRepo, createVariantRepo)
     this.deleteUseCase = new DeleteProduct(undefined, findRepo, deleteRepo, deleteVariantsRepo)
     this.shareUseCase = new ShareProduct(undefined, findRepo, userRepo)
   }
 
   async create(req: Request, res: Response): Promise<void> {
-    const { name, category, costPrice, salePrice, imageUrl } = req.body
-    const ucReq = new CreateProductUseCaseRequest(req.userId || "", name, costPrice, salePrice, category, imageUrl)
+    const { name, category, costPrice, salePrice, imageUrl, variants } = req.body
+    const ucReq = new CreateProductUseCaseRequest(req.userId || "", name, costPrice, salePrice, category, imageUrl, variants || [])
     const ucRes = await this.createUseCase.execute(ucReq)
     new SuccessResponse().success(res, ucRes)
   }
@@ -47,8 +47,8 @@ export class ProductController {
   }
 
   async update(req: Request, res: Response): Promise<void> {
-    const { name, category, costPrice, salePrice, imageUrl } = req.body
-    const ucReq = new UpdateProductUseCaseRequest(req.userId || "", req.params.id as string, name, category, costPrice, salePrice, imageUrl)
+    const { name, category, costPrice, salePrice, imageUrl, variants } = req.body
+    const ucReq = new UpdateProductUseCaseRequest(req.userId || "", req.params.id as string, name, category, costPrice, salePrice, imageUrl, variants)
     const ucRes = await this.updateUseCase.execute(ucReq)
     new SuccessResponse().success(res, ucRes)
   }

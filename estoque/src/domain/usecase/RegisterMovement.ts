@@ -1,5 +1,5 @@
 import { RegisterMovementValidate } from "../validate/movement.js"
-import type { FindVariantByIdRepository } from "../repository/product.js"
+import type { FindVariantByIdRepository, UpdateVariantStockRepository } from "../repository/product.js"
 import type { CreateMovementRepository } from "../repository/movement.js"
 import { PreconditionError, InternalServerError, TAG_PRE_CONDITION_ERROR, TAG_INTERNAL_SERVER_ERROR } from "../association/error.js"
 import { RegisterMovementUseCaseRequest, RegisterMovementUseCaseResponse } from "../ucio/Movement.js"
@@ -8,7 +8,8 @@ export class RegisterMovement {
   constructor(
     private validate: RegisterMovementValidate = new RegisterMovementValidate(),
     private variantRepository: FindVariantByIdRepository,
-    private movementRepository: CreateMovementRepository
+    private movementRepository: CreateMovementRepository,
+    private stockRepository: UpdateVariantStockRepository,
   ) {}
 
   async execute(req: RegisterMovementUseCaseRequest): Promise<RegisterMovementUseCaseResponse> {
@@ -36,6 +37,11 @@ export class RegisterMovement {
         quantity: req.quantity,
         reason: req.reason,
       })
+
+      const newStock = req.type === "IN"
+        ? variant.stock + req.quantity
+        : variant.stock - req.quantity
+      await this.stockRepository.updateVariantStock(req.variantId, newStock)
 
       return new RegisterMovementUseCaseResponse(movement, null)
     } catch (error: any) {
