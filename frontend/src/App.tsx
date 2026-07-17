@@ -74,6 +74,11 @@ export default function App() {
     const handler = (e: FocusEvent) => {
       const el = e.target as HTMLElement | null
       if (!el?.matches?.("input, select, textarea")) return
+      // Skip date/time inputs — native picker interferes with the trick
+      if (el instanceof HTMLInputElement && (el.type === "date" || el.type === "datetime-local" || el.type === "time")) return
+      // Don't run if focus is moving to another input (tab / tap between fields)
+      const nextTarget = e.relatedTarget as HTMLElement | null
+      if (nextTarget?.matches?.("input, select, textarea")) return
       setTimeout(() => {
         const tmp = document.createElement("input")
         tmp.style.position = "fixed"
@@ -87,8 +92,8 @@ export default function App() {
         window.scrollTo(0, window.scrollY)
       }, 300)
     }
-    document.addEventListener("blur", handler, true)
-    return () => document.removeEventListener("blur", handler, true)
+    document.addEventListener("focusout", handler, true)
+    return () => document.removeEventListener("focusout", handler, true)
   }, [])
 
   // Detect public share route
