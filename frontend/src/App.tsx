@@ -69,14 +69,23 @@ export default function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // iOS: reset zoom when input loses focus
+  // iOS: force viewport to zoom back out when input loses focus
   useEffect(() => {
     const handler = (e: FocusEvent) => {
       const el = e.target as HTMLElement | null
-      if (el?.matches?.("input, select, textarea")) {
-        const y = window.scrollY
-        setTimeout(() => window.scrollTo(0, y), 200)
-      }
+      if (!el?.matches?.("input, select, textarea")) return
+      setTimeout(() => {
+        const tmp = document.createElement("input")
+        tmp.style.position = "fixed"
+        tmp.style.opacity = "0"
+        tmp.style.pointerEvents = "none"
+        tmp.style.height = "0"
+        document.body.appendChild(tmp)
+        tmp.focus()
+        tmp.blur()
+        document.body.removeChild(tmp)
+        window.scrollTo(0, window.scrollY)
+      }, 300)
     }
     document.addEventListener("blur", handler, true)
     return () => document.removeEventListener("blur", handler, true)
