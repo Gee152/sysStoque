@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   LayoutDashboard, 
@@ -60,6 +60,7 @@ export default function App() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 1024 : false);
+  const mockProductIds = useRef<string[]>([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -115,6 +116,37 @@ export default function App() {
     setCurrentUser(user);
     setGlobalError(null);
   };
+
+  // Create/cleanup mock data for onboarding
+  useEffect(() => {
+    if (!showOnboarding) return;
+
+    const setup = async () => {
+      try {
+        const product = await createProduct({
+          name: "Produto Exemplo",
+          description: "Produto utilizado para demonstração no tutorial.",
+          category: "Outros",
+          variants: [
+            { name: "Padrão", price: 99.9, stock: 10 },
+            { name: "Premium", price: 149.9, stock: 5 },
+          ],
+        });
+        mockProductIds.current.push(product.id);
+        const fresh = await getProducts();
+        setProducts(fresh);
+      } catch {}
+    };
+
+    setup();
+
+    return () => {
+      const ids = mockProductIds.current;
+      mockProductIds.current = [];
+      ids.forEach(id => { deleteProduct(id).catch(() => {}); });
+      getProducts().then(fresh => setProducts(fresh)).catch(() => {});
+    };
+  }, [showOnboarding]);
 
   // Register the unauthorized handler once
   useEffect(() => {

@@ -266,7 +266,28 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
   const phaseReady = phase === "ready"
   const isInfo = step === 0 || step === 20 || step === 27 || step === steps.length - 1
 
-  const gap = 6
+  // Determine tooltip placement class based on target element position to prevent overlap
+  const gap = 6;
+
+  let tooltipPositionClass = "items-center justify-center";
+  if (hasTarget && phaseReady && rect) {
+    if (isFormField) {
+      // On desktop, place the tooltip to the side (right) of the modal to prevent any overlap
+      if (rect.top > window.innerHeight / 2) {
+        tooltipPositionClass = "items-start pt-14 justify-center lg:items-center lg:justify-end lg:pt-0 lg:pr-10 xl:pr-24";
+      } else {
+        tooltipPositionClass = "items-end pb-14 justify-center lg:items-center lg:justify-end lg:pb-0 lg:pr-10 xl:pr-24";
+      }
+    } else {
+      if (rect.top > window.innerHeight / 2) {
+        tooltipPositionClass = "items-start pt-14 lg:pt-20 justify-center";
+      } else {
+        tooltipPositionClass = "items-end pb-14 lg:pb-24 justify-center";
+      }
+    }
+  } else if (isFormField) {
+    tooltipPositionClass = "items-start pt-14 justify-center lg:items-center lg:justify-end lg:pt-0 lg:pr-10 xl:pr-24";
+  }
 
   return (
     <AnimatePresence>
@@ -330,7 +351,7 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
           )}
 
           {/* Tooltip / Card */}
-          <div className={`absolute inset-0 flex p-4 pointer-events-none ${isFormField ? 'items-start pt-14 lg:pt-20 justify-center' : 'items-center justify-center'}`}>
+          <div className={`absolute inset-0 flex p-4 pointer-events-none ${tooltipPositionClass}`}>
             <motion.div
               key={step}
               initial={isInfo ? { scale: 0.92, opacity: 0, y: 20 } : { opacity: 0, y: 20 }}
