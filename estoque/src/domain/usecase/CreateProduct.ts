@@ -1,14 +1,17 @@
 import { CreateProductValidate } from "../validate/product.js"
 import type { CreateProductRepository, CreateVariantRepository } from "../repository/product.js"
+import type { CreateMovementRepository } from "../repository/movement.js"
 import { PreconditionError, InternalServerError, TAG_PRE_CONDITION_ERROR, TAG_INTERNAL_SERVER_ERROR } from "../association/error.js"
 import { CreateProductUseCaseRequest, CreateProductUseCaseResponse } from "../ucio/Product.js"
+import { RegisterMovementUseCaseRequest } from "../ucio/Movement.js"
 import { ProductVariantAssociation } from "../association/association.js"
 
 export class CreateProduct {
   constructor(
     private validate: CreateProductValidate = new CreateProductValidate(),
     private productRepository: CreateProductRepository,
-    private variantRepository: CreateVariantRepository
+    private variantRepository: CreateVariantRepository,
+    private movementRepository: CreateMovementRepository
   ) {}
 
   async execute(req: CreateProductUseCaseRequest): Promise<CreateProductUseCaseResponse> {
@@ -38,6 +41,13 @@ export class CreateProduct {
           imageUrl: variant.imageUrl,
         })
         createdVariants.push(v)
+
+        if (variant.stock > 0) {
+          const movReq = new RegisterMovementUseCaseRequest(
+            req.userId, v.id, "IN", variant.stock, "Entrada inicial por criação de produto"
+          )
+          await this.movementRepository.createMovement({ ...movReq, productId: product.id })
+        }
       }
 
       return new CreateProductUseCaseResponse(product, createdVariants, null)

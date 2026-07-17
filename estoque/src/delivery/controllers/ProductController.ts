@@ -4,6 +4,7 @@ import { UpdateProduct } from "../../domain/usecase/UpdateProduct.js"
 import { DeleteProduct } from "../../domain/usecase/DeleteProduct.js"
 import { ShareProduct } from "../../domain/usecase/ShareProduct.js"
 import type { CreateProductRepository, FindProductByIdRepository, FindProductsByUserIdRepository, UpdateProductRepository, DeleteProductRepository, CreateVariantRepository, DeleteVariantsByProductIdRepository } from "../../domain/repository/product.js"
+import type { CreateMovementRepository } from "../../domain/repository/movement.js"
 import type { FindUserByIdRepository } from "../../domain/repository/user.js"
 import { CreateProductUseCaseRequest, ListProductsUseCaseRequest, UpdateProductUseCaseRequest, DeleteProductUseCaseRequest, ShareProductUseCaseRequest } from "../../domain/ucio/Product.js"
 import { SuccessResponse } from "../response/response.js"
@@ -25,8 +26,9 @@ export class ProductController {
     deleteRepo: DeleteProductRepository,
     deleteVariantsRepo: DeleteVariantsByProductIdRepository,
     userRepo: FindUserByIdRepository,
+    movementRepo: CreateMovementRepository,
   ) {
-    this.createUseCase = new CreateProduct(undefined, createRepo, createVariantRepo)
+    this.createUseCase = new CreateProduct(undefined, createRepo, createVariantRepo, movementRepo)
     this.listUseCase = new ListProducts(undefined, listRepo)
     this.updateUseCase = new UpdateProduct(undefined, findRepo, updateRepo, deleteVariantsRepo, createVariantRepo)
     this.deleteUseCase = new DeleteProduct(undefined, findRepo, deleteRepo, deleteVariantsRepo)
