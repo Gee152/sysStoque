@@ -22,13 +22,23 @@ export class UpdateClientFlowStatus {
         return new UpdateClientFlowStatusUseCaseResponse(null, new PreconditionError("Registro não encontrado."))
       }
 
+      const updates = [...existing.updates]
+      if (req.description?.trim()) {
+        updates.push({
+          status: req.currentStatus,
+          description: req.description,
+          timestamp: new Date().toISOString(),
+        })
+      }
+
       const updateData: any = {
         currentStatus: req.currentStatus,
+        description: req.description || existing.description,
+        updates,
         updatedAt: new Date(),
       }
 
       if (req.currentStatus === "NOTAS") {
-        updateData.description = req.description
         updateData.nextFollowUpAt = req.nextFollowUpAt ? new Date(req.nextFollowUpAt) : null
       }
 

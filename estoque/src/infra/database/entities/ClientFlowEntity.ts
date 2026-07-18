@@ -21,6 +21,9 @@ export class ClientFlowEntity {
   @Column("text", { name: "description", nullable: true })
   public description?: string;
 
+  @Column("jsonb", { name: "updates", nullable: false, default: [] })
+  public updates: Array<{ status: string; description: string; timestamp: string }>;
+
   @Column({ type: "enum", enum: ["ENVIADO", "NEGOCIANDO", "FECHADO", "NOTAS"], name: "current_status", default: "ENVIADO" })
   public currentStatus!: string;
 
@@ -47,7 +50,8 @@ export class ClientFlowEntity {
     currentStatus?: string,
     nextFollowUpAt?: Date,
     createdAt?: Date,
-    updatedAt?: Date
+    updatedAt?: Date,
+    updates?: Array<{ status: string; description: string; timestamp: string }>
   ) {
     this.id = id;
     this.trackingToken = trackingToken;
@@ -56,6 +60,7 @@ export class ClientFlowEntity {
     this.clientContact = clientContact;
     this.userId = userId;
     this.description = description;
+    this.updates = updates || [];
     this.currentStatus = currentStatus || "ENVIADO";
     this.nextFollowUpAt = nextFollowUpAt;
     this.createdAt = createdAt || new Date();

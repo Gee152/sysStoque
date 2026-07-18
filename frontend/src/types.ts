@@ -49,6 +49,12 @@ export interface Movement {
 
 export type ClientFlowStatus = "ENVIADO" | "NEGOCIANDO" | "NOTAS" | "FECHADO";
 
+export interface ClientFlowUpdate {
+  status: ClientFlowStatus;
+  description: string;
+  timestamp: string;
+}
+
 export interface ClientFlow {
   id: string;
   trackingToken: string;
@@ -59,6 +65,7 @@ export interface ClientFlow {
   currentStatus: ClientFlowStatus;
   nextFollowUpAt?: string;
   userId: string;
+  updates: ClientFlowUpdate[];
   createdAt: string;
   updatedAt: string;
 }

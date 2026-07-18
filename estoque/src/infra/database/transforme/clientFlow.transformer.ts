@@ -13,7 +13,8 @@ export function toClientFlowDomain(e: ClientFlowEntity): ClientFlowAssociation {
     e.currentStatus,
     e.nextFollowUpAt,
     e.createdAt,
-    e.updatedAt
+    e.updatedAt,
+    e.updates as Array<{ status: string; description: string; timestamp: string }> | undefined
   );
 }
 
@@ -29,6 +30,7 @@ export function toClientFlowEntity(d: ClientFlowAssociation): ClientFlowEntity {
     d.currentStatus,
     d.nextFollowUpAt,
     d.createdAt,
-    d.updatedAt
+    d.updatedAt,
+    d.updates
   );
 }

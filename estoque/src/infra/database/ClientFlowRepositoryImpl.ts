@@ -19,6 +19,7 @@ export class ClientFlowRepositoryImpl implements
     clientContact: string
     userId: string
     description?: string
+    updates?: Array<{ status: string; description: string; timestamp: string }>
   }): Promise<ClientFlowAssociation> {
     const repo = AppDataSource.getRepository(ClientFlowEntity)
     const entity = repo.create({
@@ -28,6 +29,7 @@ export class ClientFlowRepositoryImpl implements
       clientContact: data.clientContact,
       userId: data.userId,
       description: data.description,
+      updates: data.updates || [],
       currentStatus: "ENVIADO",
     })
     const saved = await repo.save(entity)
@@ -50,6 +52,7 @@ export class ClientFlowRepositoryImpl implements
     currentStatus?: string
     description?: string
     nextFollowUpAt?: Date | null
+    updates?: Array<{ status: string; description: string; timestamp: string }>
     updatedAt?: Date
   }): Promise<ClientFlowAssociation> {
     const repo = AppDataSource.getRepository(ClientFlowEntity)

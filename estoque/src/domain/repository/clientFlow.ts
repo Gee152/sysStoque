@@ -8,6 +8,7 @@ export interface CreateClientFlowRepository {
     clientContact: string
     userId: string
     description?: string
+    updates?: Array<{ status: string; description: string; timestamp: string }>
   }): Promise<ClientFlowAssociation>
 }
 
@@ -24,6 +25,7 @@ export interface UpdateClientFlowRepository {
     currentStatus?: string
     description?: string
     nextFollowUpAt?: Date | null
+    updates?: Array<{ status: string; description: string; timestamp: string }>
     updatedAt?: Date
   }): Promise<ClientFlowAssociation>
 }

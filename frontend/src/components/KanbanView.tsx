@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Plus, Phone, Package, Calendar, X, Check, ChevronRight, Clock, AlertCircle, MessageCircle, Send, ListTodo, TrendingUp, XCircle, Pencil, ArrowRight } from "lucide-react";
-import type { ClientFlow, ClientFlowStatus, Product } from "../types";
+import { Plus, Phone, Package, Calendar, X, Check, ChevronRight, Clock, AlertCircle, MessageCircle, Send, ListTodo, TrendingUp, Pencil, ArrowRight, History } from "lucide-react";
+import type { ClientFlow, ClientFlowStatus, ClientFlowUpdate, Product } from "../types";
 import { useNotification } from "./Notification";
 
 const COLUMNS: { id: ClientFlowStatus; label: string; icon: any; color: string }[] = [
@@ -10,6 +10,13 @@ const COLUMNS: { id: ClientFlowStatus; label: string; icon: any; color: string }
   { id: "NOTAS", label: "Notas", icon: ListTodo, color: "border-t-purple-500 bg-purple-50/50 dark:bg-purple-950/10" },
   { id: "FECHADO", label: "Fechado", icon: TrendingUp, color: "border-t-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/10" },
 ];
+
+const STATUS_LABELS: Record<string, string> = {
+  ENVIADO: "Enviado",
+  NEGOCIANDO: "Negociando",
+  NOTAS: "Notas",
+  FECHADO: "Fechado",
+};
 
 interface KanbanViewProps {
   flows: ClientFlow[];
@@ -84,7 +91,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
     const target = nextStatus(flow.currentStatus as ClientFlowStatus);
     if (!target) return;
     setMoveModal({ flow, targetStatus: target });
-    setModalDescription(flow.description || "");
+    setModalDescription("");
     setModalFollowUp("");
     setModalError(null);
   };
@@ -103,7 +110,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
     const flow = localFlows.find(f => f.id === item.id);
     if (flow) {
       setMoveModal({ flow, targetStatus });
-      setModalDescription(flow.description || "");
+      setModalDescription("");
       setModalFollowUp("");
       setModalError(null);
     }
@@ -114,13 +121,14 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
     if (!moveModal) return;
     const { flow, targetStatus } = moveModal;
 
+    if (!modalDescription.trim()) {
+      setModalError("Observação obrigatória para avançar.");
+      return;
+    }
+
     if (targetStatus === "NOTAS") {
       if (!modalFollowUp) {
         setModalError("Data de retorno obrigatória.");
-        return;
-      }
-      if (!modalDescription.trim()) {
-        setModalError("Descrição da objeção obrigatória.");
         return;
       }
 
@@ -131,13 +139,25 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
       }
     }
 
+    const newUpdate: ClientFlowUpdate = {
+      status: targetStatus,
+      description: modalDescription,
+      timestamp: new Date().toISOString(),
+    };
+
     setLocalFlows(prev => prev.map(f =>
-      f.id === flow.id ? { ...f, currentStatus: targetStatus, description: modalDescription, nextFollowUpAt: targetStatus === "NOTAS" ? modalFollowUp : f.nextFollowUpAt } : f
+      f.id === flow.id ? {
+        ...f,
+        currentStatus: targetStatus,
+        description: modalDescription,
+        updates: [...(f.updates || []), newUpdate],
+        nextFollowUpAt: targetStatus === "NOTAS" ? modalFollowUp : f.nextFollowUpAt,
+      } : f
     ));
 
     try {
       const data: { currentStatus: ClientFlowStatus; description?: string; nextFollowUpAt?: string } = { currentStatus: targetStatus };
-      if (modalDescription.trim()) data.description = modalDescription;
+      data.description = modalDescription;
       if (targetStatus === "NOTAS" && modalFollowUp) data.nextFollowUpAt = modalFollowUp;
       await onUpdateStatus(flow.id, data);
       setMoveModal(null);
@@ -147,7 +167,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
       notify.success(`Card movido para ${COLUMNS.find(c => c.id === targetStatus)?.label}.`);
     } catch {
       setLocalFlows(prev => prev.map(f =>
-        f.id === flow.id ? { ...f, currentStatus: flow.currentStatus as ClientFlowStatus, description: flow.description, nextFollowUpAt: flow.nextFollowUpAt } : f
+        f.id === flow.id ? flow : f
       ));
     }
   };
@@ -161,7 +181,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
 
   const handleEditOpen = (flow: ClientFlow) => {
     setEditModal(flow);
-    setModalDescription(flow.description || "");
+    setModalDescription("");
     setModalFollowUp(flow.nextFollowUpAt || "");
     setModalError(null);
   };
@@ -170,13 +190,28 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
     if (!editModal) return;
     const flow = editModal;
 
+    if (!modalDescription.trim()) {
+      setModalError("Observação obrigatória.");
+      return;
+    }
+
+    const newUpdate: ClientFlowUpdate = {
+      status: flow.currentStatus as ClientFlowStatus,
+      description: modalDescription,
+      timestamp: new Date().toISOString(),
+    };
+
+    const updatedUpdates = [...(flow.updates || []), newUpdate];
+
     setLocalFlows(prev => prev.map(f =>
-      f.id === flow.id ? { ...f, description: modalDescription, nextFollowUpAt: modalFollowUp } : f
+      f.id === flow.id ? { ...f, description: modalDescription, updates: updatedUpdates } : f
     ));
 
     try {
-      const data: { currentStatus: ClientFlowStatus; description?: string; nextFollowUpAt?: string } = { currentStatus: flow.currentStatus as ClientFlowStatus };
-      if (modalDescription !== flow.description) data.description = modalDescription;
+      const data: { currentStatus: ClientFlowStatus; description?: string; nextFollowUpAt?: string } = {
+        currentStatus: flow.currentStatus as ClientFlowStatus,
+        description: modalDescription,
+      };
       if (modalFollowUp !== flow.nextFollowUpAt) data.nextFollowUpAt = modalFollowUp;
       await onUpdateStatus(flow.id, data);
       setEditModal(null);
@@ -186,7 +221,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
       notify.success("Lead atualizado.");
     } catch {
       setLocalFlows(prev => prev.map(f =>
-        f.id === flow.id ? { ...f, description: flow.description, nextFollowUpAt: flow.nextFollowUpAt } : f
+        f.id === flow.id ? flow : f
       ));
     }
   };
@@ -280,6 +315,10 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                   </div>
                 ) : items.map(flow => {
                   const product = products.find(p => p.id === flow.productId);
+                  const updates = flow.updates || [];
+                  const latestUpdate = updates.length > 0 ? updates[updates.length - 1] : null;
+                  const previousUpdates = updates.slice(0, -1);
+
                   return (
                     <motion.div
                       key={flow.id}
@@ -302,7 +341,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                           <button
                             onClick={(e) => { e.stopPropagation(); handleEditOpen(flow); }}
                             className="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                            title="Editar lead"
+                            title="Adicionar atualização"
                           >
                             <Pencil className="w-3 h-3" />
                           </button>
@@ -317,15 +356,38 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                         </div>
                       )}
 
+                      {/* Update History */}
+                      {updates.length > 0 && (
+                        <div className="space-y-1.5 pt-1 border-t border-slate-100 dark:border-slate-700">
+                          <div className="flex items-center gap-1">
+                            <History className="w-3 h-3 text-slate-400" />
+                            <span className="text-[8px] font-semibold uppercase text-slate-400 dark:text-slate-500 tracking-wider">Atualizações</span>
+                          </div>
+                          <div className="space-y-1 max-h-28 overflow-y-auto">
+                            {updates.map((u, i) => (
+                              <div key={i} className="flex items-start gap-1.5">
+                                <div className={`w-1.5 h-1.5 rounded-full mt-1 shrink-0 ${
+                                  u.status === "ENVIADO" ? "bg-blue-500" :
+                                  u.status === "NEGOCIANDO" ? "bg-amber-500" :
+                                  u.status === "NOTAS" ? "bg-purple-500" : "bg-emerald-500"
+                                }`} />
+                                <div className="min-w-0">
+                                  <p className="text-[9px] text-slate-600 dark:text-slate-300 leading-relaxed break-words">{u.description}</p>
+                                  <p className="text-[7px] text-slate-400 dark:text-slate-500 mt-0.5">
+                                    {STATUS_LABELS[u.status] || u.status} · {formatDateTime(u.timestamp)}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {flow.nextFollowUpAt && (
                         <div className="flex items-center gap-1 pt-1 border-t border-slate-100 dark:border-slate-700">
                           <Calendar className="w-3 h-3 text-purple-500" />
                           <span className="text-[9px] text-purple-600 dark:text-purple-400 font-medium">Retorno: {formatDateTime(flow.nextFollowUpAt)}</span>
                         </div>
-                      )}
-
-                      {flow.description && (
-                        <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">{flow.description}</p>
                       )}
 
                       {nextStatus(flow.currentStatus as ClientFlowStatus) && (
@@ -481,6 +543,22 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                 Lead: <strong className="text-slate-700 dark:text-slate-300">{moveModal.flow.clientName}</strong>
               </p>
 
+              {/* Previous updates */}
+              {moveModal.flow.updates && moveModal.flow.updates.length > 0 && (
+                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2.5 space-y-1.5 max-h-24 overflow-y-auto">
+                  <p className="text-[8px] font-semibold uppercase text-slate-400 dark:text-slate-500 tracking-wider">Histórico</p>
+                  {moveModal.flow.updates.map((u, i) => (
+                    <div key={i} className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      <span className={`font-medium ${
+                        u.status === "ENVIADO" ? "text-blue-500" :
+                        u.status === "NEGOCIANDO" ? "text-amber-500" :
+                        u.status === "NOTAS" ? "text-purple-500" : "text-emerald-500"
+                      }`}>[{STATUS_LABELS[u.status]}]</span> {u.description}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {modalError && (
                 <div className="flex items-start gap-1.5 p-2 text-[10px] rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400">
                   <AlertCircle className="w-3 h-3 shrink-0 mt-0.5" />
@@ -491,7 +569,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
               <div className="space-y-2">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">
-                    {moveModal.targetStatus === "NOTAS" ? "Descrição da Objeção *" : "Observação"}
+                    {moveModal.targetStatus === "NOTAS" ? "Descrição da Objeção *" : "Nova Atualização *"}
                   </label>
                   <textarea
                     rows={3}
@@ -556,13 +634,29 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                 <div className="p-1.5 rounded-full bg-slate-100 dark:bg-slate-700">
                   <Pencil className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                 </div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Editar Lead</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Adicionar Atualização</h3>
               </div>
 
               <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                 <strong className="text-slate-700 dark:text-slate-300">{editModal.clientName}</strong>
                 <span className="ml-1">· {formatPhone(editModal.clientContact)}</span>
               </p>
+
+              {/* Previous updates */}
+              {editModal.updates && editModal.updates.length > 0 && (
+                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-2.5 space-y-1.5 max-h-24 overflow-y-auto">
+                  <p className="text-[8px] font-semibold uppercase text-slate-400 dark:text-slate-500 tracking-wider">Histórico</p>
+                  {editModal.updates.map((u, i) => (
+                    <div key={i} className="text-[9px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      <span className={`font-medium ${
+                        u.status === "ENVIADO" ? "text-blue-500" :
+                        u.status === "NEGOCIANDO" ? "text-amber-500" :
+                        u.status === "NOTAS" ? "text-purple-500" : "text-emerald-500"
+                      }`}>[{STATUS_LABELS[u.status]}]</span> {u.description}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {modalError && (
                 <div className="flex items-start gap-1.5 p-2 text-[10px] rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400">
@@ -573,10 +667,10 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
 
               <div className="space-y-2">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Observação</label>
+                  <label className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400">Nova Atualização *</label>
                   <textarea
                     rows={3}
-                    placeholder="Informações do lead..."
+                    placeholder="Adicione uma nova observação sobre este lead..."
                     value={modalDescription}
                     onChange={e => setModalDescription(e.target.value)}
                     className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
@@ -606,7 +700,7 @@ export default function KanbanView({ flows, products, onCreateFlow, onUpdateStat
                   className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs transition-all flex items-center justify-center gap-1"
                 >
                   <Check className="w-3 h-3" />
-                  Salvar
+                  Adicionar
                 </button>
               </div>
             </motion.div>

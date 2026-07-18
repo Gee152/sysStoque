@@ -108,6 +108,7 @@ export class ClientFlowAssociation {
   public description?: string
   public currentStatus: string
   public nextFollowUpAt?: Date
+  public updates: Array<{ status: string; description: string; timestamp: string }>
   public createdAt: Date
   public updatedAt: Date
 
@@ -122,7 +123,8 @@ export class ClientFlowAssociation {
     currentStatus?: string,
     nextFollowUpAt?: Date,
     createdAt?: Date,
-    updatedAt?: Date
+    updatedAt?: Date,
+    updates?: Array<{ status: string; description: string; timestamp: string }>
   ) {
     this.id = id
     this.trackingToken = trackingToken
@@ -131,6 +133,7 @@ export class ClientFlowAssociation {
     this.clientContact = clientContact
     this.userId = userId
     this.description = description
+    this.updates = updates || []
     this.currentStatus = currentStatus || "ENVIADO"
     this.nextFollowUpAt = nextFollowUpAt
     this.createdAt = createdAt || new Date()
