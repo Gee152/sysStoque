@@ -32,7 +32,7 @@ export function createRouter(): Router {
   const movementRepo = new MovementRepositoryImpl()
 
   const authController = new AuthController(userRepo, userRepo, userRepo)
-  const productController = new ProductController(productRepo, productRepo, productRepo, productRepo, productRepo, productRepo, productRepo, userRepo, movementRepo)
+  const productController = new ProductController(productRepo, productRepo, productRepo, productRepo, productRepo, productRepo, productRepo, movementRepo, userRepo, movementRepo)
   const movementController = new MovementController(productRepo, movementRepo, movementRepo, movementRepo, productRepo)
   const uploadController = new UploadController()
   const clientFlowRepo = new ClientFlowRepositoryImpl()

@@ -12,3 +12,7 @@ export interface FindMovementsByUserIdRepository {
 export interface GetDashboardDataRepository {
   getDashboardData(userId: string, periodDays?: number): Promise<any>
 }
+
+export interface DeleteMovementsByProductIdRepository {
+  deleteMovementsByProductId(productId: string): Promise<void>
+}

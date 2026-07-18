@@ -5,9 +5,9 @@ import { MovementEntity } from "./entities/MovementEntity.js"
 import { ProductEntity } from "./entities/ProductEntity.js"
 import { ProductVariantEntity } from "./entities/ProductVariantEntity.js"
 import { RegisterMovementUseCaseRequest } from "../../domain/ucio/Movement.js"
-import type { CreateMovementRepository, FindMovementsByUserIdRepository, GetDashboardDataRepository } from "../../domain/repository/movement.js"
+import type { CreateMovementRepository, FindMovementsByUserIdRepository, GetDashboardDataRepository, DeleteMovementsByProductIdRepository } from "../../domain/repository/movement.js"
 
-export class MovementRepositoryImpl implements CreateMovementRepository, FindMovementsByUserIdRepository, GetDashboardDataRepository {
+export class MovementRepositoryImpl implements CreateMovementRepository, FindMovementsByUserIdRepository, GetDashboardDataRepository, DeleteMovementsByProductIdRepository {
   async createMovement(data: RegisterMovementUseCaseRequest & { productId: string }): Promise<MovementAssociation> {
     const repository = AppDataSource.getRepository(MovementEntity)
     const movement = repository.create(data)
@@ -35,6 +35,11 @@ export class MovementRepositoryImpl implements CreateMovementRepository, FindMov
     const repository = AppDataSource.getRepository(MovementEntity)
     const movements = await repository.find({ where: { productId }, order: { createdAt: "DESC" } })
     return movements.map((m) => toMovementDomain(m))
+  }
+
+  async deleteMovementsByProductId(productId: string): Promise<void> {
+    const repository = AppDataSource.getRepository(MovementEntity)
+    await repository.delete({ productId })
   }
 
   async getDashboardData(userId: string, periodDays = 30): Promise<any> {
