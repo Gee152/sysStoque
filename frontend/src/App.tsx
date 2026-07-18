@@ -60,7 +60,7 @@ export default function App() {
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 1024 : false);
-  const mockProductIds = useRef<string[]>([]);
+  const onboardingCleanup = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -121,6 +121,9 @@ export default function App() {
   useEffect(() => {
     if (!showOnboarding) return;
 
+    let cancelled = false;
+    const ids: string[] = [];
+
     const setup = async () => {
       try {
         const product = await createProduct({
@@ -129,22 +132,29 @@ export default function App() {
           category: "Outros",
           variants: [
             { name: "Padrão", price: 99.9, stock: 10 },
-            { name: "Premium", price: 149.9, stock: 5 },
           ],
         });
-        mockProductIds.current.push(product.id);
+        if (cancelled) {
+          deleteProduct(product.id).catch(() => {});
+          return;
+        }
+        ids.push(product.id);
         const fresh = await getProducts();
-        setProducts(fresh);
+        if (!cancelled) setProducts(fresh);
       } catch {}
     };
 
     setup();
 
-    return () => {
-      const ids = mockProductIds.current;
-      mockProductIds.current = [];
+    onboardingCleanup.current = () => {
       ids.forEach(id => { deleteProduct(id).catch(() => {}); });
       getProducts().then(fresh => setProducts(fresh)).catch(() => {});
+    };
+
+    return () => {
+      cancelled = true;
+      onboardingCleanup.current?.();
+      onboardingCleanup.current = null;
     };
   }, [showOnboarding]);
 
