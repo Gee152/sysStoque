@@ -265,14 +265,14 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
   const hasTarget = !!current.targetId
   const phaseReady = phase === "ready"
   const isInfo = step === 0 || step === 20 || step === 27 || step === steps.length - 1
+  const showTooltip = isInfo || (hasTarget && phaseReady)
 
   // Determine tooltip placement class based on target element position to prevent overlap
   const gap = 6;
 
   let tooltipPositionClass = "items-center justify-center";
-  if (hasTarget && phaseReady && rect) {
+  if (hasTarget && showTooltip && rect) {
     if (isFormField) {
-      // On desktop, place the tooltip to the side (right) of the modal to prevent any overlap
       if (rect.top > window.innerHeight / 2) {
         tooltipPositionClass = "items-start pt-14 justify-center lg:items-center lg:justify-end lg:pt-0 lg:pr-10 xl:pr-24";
       } else {
@@ -285,8 +285,6 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
         tooltipPositionClass = "items-end pb-14 lg:pb-24 justify-center";
       }
     }
-  } else if (isFormField) {
-    tooltipPositionClass = "items-start pt-14 justify-center lg:items-center lg:justify-end lg:pt-0 lg:pr-10 xl:pr-24";
   }
 
   return (
@@ -299,30 +297,14 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
           transition={{ duration: 0.25 }}
           className="fixed inset-0 z-[9998]"
         >
-          {/* Blur cutout: 4 sections around target */}
-          {hasTarget && phaseReady && rect && !isInfo && (
-            <>
-              {/* Top */}
-              <div
-                className="fixed bg-black/15 backdrop-blur-[3px] pointer-events-none"
-                style={{ top: 0, left: 0, right: 0, height: Math.max(0, rect.top - gap) }}
-              />
-              {/* Bottom */}
-              <div
-                className="fixed bg-black/15 backdrop-blur-[3px] pointer-events-none"
-                style={{ top: rect.bottom + gap, left: 0, right: 0, bottom: 0 }}
-              />
-              {/* Left (between top and bottom) */}
-              <div
-                className="fixed bg-black/15 backdrop-blur-[3px] pointer-events-none"
-                style={{ top: Math.max(0, rect.top - gap), left: 0, width: Math.max(0, rect.left - gap), height: rect.height + gap * 2 }}
-              />
-              {/* Right (between top and bottom) */}
-              <div
-                className="fixed bg-black/15 backdrop-blur-[3px] pointer-events-none"
-                style={{ top: Math.max(0, rect.top - gap), left: rect.right + gap, right: 0, height: rect.height + gap * 2 }}
-              />
-            </>
+          {/* Loading spinner for steps with target while preparing */}
+          {hasTarget && !phaseReady && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm pointer-events-none">
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 shadow-lg border border-slate-200 dark:border-slate-700">
+                <div className="w-4 h-4 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
+                <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">Preparando tela...</span>
+              </div>
+            </div>
           )}
 
           {/* Simple overlay for info steps */}
@@ -330,8 +312,30 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
             <div className="absolute inset-0 bg-black/20 backdrop-blur-sm pointer-events-none" />
           )}
 
+          {/* Blur cutout: 4 sections around target */}
+          {hasTarget && showTooltip && rect && !isInfo && (
+            <>
+              <div
+                className="fixed bg-black/15 backdrop-blur-[3px] pointer-events-none"
+                style={{ top: 0, left: 0, right: 0, height: Math.max(0, rect.top - gap) }}
+              />
+              <div
+                className="fixed bg-black/15 backdrop-blur-[3px] pointer-events-none"
+                style={{ top: rect.bottom + gap, left: 0, right: 0, bottom: 0 }}
+              />
+              <div
+                className="fixed bg-black/15 backdrop-blur-[3px] pointer-events-none"
+                style={{ top: Math.max(0, rect.top - gap), left: 0, width: Math.max(0, rect.left - gap), height: rect.height + gap * 2 }}
+              />
+              <div
+                className="fixed bg-black/15 backdrop-blur-[3px] pointer-events-none"
+                style={{ top: Math.max(0, rect.top - gap), left: rect.right + gap, right: 0, height: rect.height + gap * 2 }}
+              />
+            </>
+          )}
+
           {/* Highlight ring */}
-          {hasTarget && phaseReady && rect && (
+          {hasTarget && showTooltip && rect && (
             <div
               className="absolute pointer-events-none z-10"
               style={{
@@ -350,120 +354,115 @@ export default function Onboarding({ onComplete, activeTab, onNavigateTab }: Onb
             </div>
           )}
 
-          {/* Tooltip / Card */}
-          <div className={`absolute inset-0 flex p-4 pointer-events-none ${tooltipPositionClass}`}>
-            <motion.div
-              key={step}
-              initial={isInfo ? { scale: 0.92, opacity: 0, y: 20 } : { opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={isInfo ? { scale: 0.92, opacity: 0, y: 20 } : { opacity: 0, y: 10 }}
-              transition={{ type: "spring", stiffness: 350, damping: 28 }}
-              className="relative w-full max-w-sm lg:max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden pointer-events-auto"
-            >
-              {/* Close button */}
-              <button
-                onClick={finish}
-                className="absolute top-3 right-3 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors z-10 cursor-pointer"
-                tabIndex={-1}
+          {/* Tooltip / Card — only renders when phase is ready (or isInfo) to avoid positioning jumps */}
+          {showTooltip && (
+            <div className={`absolute inset-0 flex p-4 pointer-events-none ${tooltipPositionClass}`}>
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 350, damping: 28 }}
+                className="relative w-full max-w-sm lg:max-w-md rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden pointer-events-auto"
               >
-                <X className="w-4 h-4" />
-              </button>
+                {/* Close button */}
+                <button
+                  onClick={finish}
+                  className="absolute top-3 right-3 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors z-10 cursor-pointer"
+                  tabIndex={-1}
+                >
+                  <X className="w-4 h-4" />
+                </button>
 
-              {/* Content */}
-              <div className={`flex flex-col ${isInfo ? 'items-center text-center px-6 pt-10 pb-6 min-h-[260px]' : 'px-5 pt-5 pb-4'}`}>
-                {isInfo ? (
-                  <div className="flex flex-col items-center">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mb-4 border border-indigo-100 dark:border-indigo-800">
-                      {step === 0 ? (
-                        <ShieldCheck className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
-                      ) : step === 20 ? (
-                        <TrendingUp className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
-                      ) : step === 27 ? (
-                        <MousePointerClick className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
-                      ) : (
-                        <Package className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
-                      )}
-                    </div>
-                    <h2 className="text-lg lg:text-xl font-bold text-slate-900 dark:text-white mb-2">{current.title}</h2>
-                    <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs lg:max-w-sm">{current.description}</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center border border-indigo-100 dark:border-indigo-800 shrink-0 mt-0.5">
-                        <MousePointerClick className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                {/* Content */}
+                <div className={`flex flex-col ${isInfo ? 'items-center text-center px-6 pt-10 pb-6 min-h-[260px]' : 'px-5 pt-5 pb-4'}`}>
+                  {isInfo ? (
+                    <div className="flex flex-col items-center">
+                      <div className="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mb-4 border border-indigo-100 dark:border-indigo-800">
+                        {step === 0 ? (
+                          <ShieldCheck className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+                        ) : step === 20 ? (
+                          <TrendingUp className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+                        ) : step === 27 ? (
+                          <MousePointerClick className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+                        ) : (
+                          <Package className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
+                        )}
                       </div>
-                      <div className="min-w-0">
-                        <h2 className="text-sm lg:text-base font-bold text-slate-900 dark:text-white mb-1">{current.title}</h2>
-                        <p className="text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{current.description}</p>
+                      <h2 className="text-lg lg:text-xl font-bold text-slate-900 dark:text-white mb-2">{current.title}</h2>
+                      <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs lg:max-w-sm">{current.description}</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center border border-indigo-100 dark:border-indigo-800 shrink-0 mt-0.5">
+                          <MousePointerClick className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div className="min-w-0">
+                          <h2 className="text-sm lg:text-base font-bold text-slate-900 dark:text-white mb-1">{current.title}</h2>
+                          <p className="text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{current.description}</p>
+                        </div>
                       </div>
+                    </>
+                  )}
+
+                  <div className={`flex flex-col items-center gap-3 ${isInfo ? 'mt-6' : 'mt-3'}`}>
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-1">
+                        {[0, 1, 2].map((i) => (
+                          <div
+                            key={i}
+                            className={`h-1.5 rounded-full transition-all duration-300 ${
+                              i === 1
+                                ? "w-5 bg-indigo-600 dark:bg-indigo-400"
+                                : "w-1.5 bg-slate-300 dark:bg-slate-600"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+                        {step + 1}/{steps.length}
+                      </span>
                     </div>
 
-                    {!phaseReady && (
-                      <div className="flex items-center gap-2 py-1">
-                        <div className="w-3 h-3 rounded-full border-2 border-indigo-400 border-t-transparent animate-spin" />
-                        <span className="text-[10px] text-slate-400">Preparando tela...</span>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                <div className={`flex flex-col items-center gap-3 ${isInfo ? 'mt-6' : 'mt-3'}`}>
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
-                      {[0, 1, 2].map((i) => (
-                        <div
-                          key={i}
-                          className={`h-1.5 rounded-full transition-all duration-300 ${
-                            i === 1
-                              ? "w-5 bg-indigo-600 dark:bg-indigo-400"
-                              : "w-1.5 bg-slate-300 dark:bg-slate-600"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
-                      {step + 1}/{steps.length}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between w-full gap-2">
-                    <button
-                      onClick={finish}
-                      className="px-3 py-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
-                      tabIndex={-1}
-                    >
-                      Pular
-                    </button>
-
-                    <div className="flex gap-2">
-                      {!isFirst && (
-                        <button
-                          onClick={handlePrev}
-                          className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                          tabIndex={-1}
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                      )}
+                    <div className="flex items-center justify-between w-full gap-2">
                       <button
-                        onClick={handleNext}
-                        className={`flex items-center gap-1 px-4 py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                          isLast
-                            ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-200 dark:shadow-indigo-900/30"
-                            : "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50"
-                        }`}
+                        onClick={finish}
+                        className="px-3 py-2 text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
                         tabIndex={-1}
                       >
-                        <span>{isLast ? "Começar" : "Próximo"}</span>
-                        {!isLast && <ChevronRight className="w-3.5 h-3.5" />}
+                        Pular
                       </button>
+
+                      <div className="flex gap-2">
+                        {!isFirst && (
+                          <button
+                            onClick={handlePrev}
+                            className="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                            tabIndex={-1}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={handleNext}
+                          className={`flex items-center gap-1 px-4 py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                            isLast
+                              ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-200 dark:shadow-indigo-900/30"
+                              : "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/50"
+                          }`}
+                          tabIndex={-1}
+                        >
+                          <span>{isLast ? "Começar" : "Próximo"}</span>
+                          {!isLast && <ChevronRight className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
+              </motion.div>
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
