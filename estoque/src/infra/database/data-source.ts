@@ -21,7 +21,7 @@ if (!process.env.DATABASE_URL) {
 export const AppDataSource = new DataSource({
   type: "postgres",
   url: process.env.DATABASE_URL,
-  synchronize: true,
+  synchronize: false,
   logging: process.env.NODE_ENV === "development",
   entities: [UserEntity, ProductEntity, ProductVariantEntity, MovementEntity, ClientFlowEntity],
   ssl: {
