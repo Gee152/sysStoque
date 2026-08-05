@@ -8,7 +8,6 @@ import { ClientFlowEntity } from "./entities/ClientFlowEntity.js";
 import dotenv from 'dotenv';
 
 // 1. Só carrega o dotenv se estiver rodando localmente na sua máquina.
-// Isso evita que o Vercel se confunda caso o arquivo .env tenha ido parar no GitHub.
 if (process.env.NODE_ENV !== "production") {
   dotenv.config();
 }
@@ -39,14 +38,23 @@ export const AppDataSource = new DataSource({
 let initialized = false;
 
 export async function getDataSource(): Promise<DataSource> {
+  const currentDatabaseUrl = process.env.DATABASE_URL;
+
+  console.log("🔌 Iniciando conexão com o banco. Status da URL:", currentDatabaseUrl ? "✅ Presente e capturada" : "❌ VAZIA/UNDEFINED");
+
   if (!initialized) {
-    // 3. Log de diagnóstico para termos certeza do que está acontecendo na nuvem
-    console.log("🔌 Iniciando conexão com o banco. Status da URL:", process.env.DATABASE_URL ? "✅ Presente e capturada" : "❌ VAZIA/UNDEFINED");
+    // Atualiza a URL dinamicamente no momento da execução para evitar cache estático do build
+    AppDataSource.setOptions({
+      url: currentDatabaseUrl,
+    });
     
     await AppDataSource.initialize();
     initialized = true;
 
     console.log("✅ Conexão com o Supabase estabelecida com sucesso!");
+  } else if (!AppDataSource.isInitialized) {
+    await AppDataSource.initialize();
   }
+
   return AppDataSource;
 }
